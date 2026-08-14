@@ -1,0 +1,189 @@
+const express = require('express');
+const cors = require('cors');
+const ThermalPrinter = require("node-thermal-printer").printer;
+const PrinterTypes = require("node-thermal-printer").types;
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Nome da impressora instalada no Windows (ou nome de compartilhamento)
+// É possível passar pelo header ou fixar aqui
+const PRINTER_INTERFACE = "BEMATECH";
+
+const fs = require('fs');
+const { exec } = require('child_process');
+
+function getPrinter() {
+  return new ThermalPrinter({
+    type: PrinterTypes.EPSON,
+    interface: 'tcp://127.0.0.1:9090', // "Dummy" interface só para enganar a biblioteca. Não vai conectar aqui.
+    characterSet: 'PC860_POR', // Necessário para a biblioteca não dar erro de undefined
+    removeSpecialCharacters: false,
+    lineCharacter: "-",
+  });
+}
+
+// Função auxiliar para enviar direto pro Windows sem precisar de driver nativo do Node
+function printBuffer(buffer) {
+  return new Promise((resolve, reject) => {
+    const tempFile = 'receipt_temp.bin';
+    fs.writeFileSync(tempFile, buffer);
+    
+    // Comando nativo do Windows para enviar um arquivo binário para a impressora compartilhada
+    exec('copy /B receipt_temp.bin \\\\localhost\\BEMATECH', (error, stdout, stderr) => {
+      if (error) {
+        console.error("Erro no comando COPY:", error);
+        return reject(error);
+      }
+      resolve();
+    });
+  });
+}
+
+// 1. Rota para imprimir o recibo (2 Vias)
+app.post('/print', async (req, res) => {
+  try {
+    const data = req.body;
+    let printer = getPrinter();
+
+    const senha = data.orderId.toUpperCase().substring(0, 5);
+
+    // ==========================================
+    // VIA DO BALCÃO
+    // ==========================================
+    printer.alignCenter();
+    printer.bold(true);
+    printer.setTextSize(1, 1);
+    printer.println("VIA DO BALCAO");
+    printer.bold(false);
+    printer.setTextNormal();
+    printer.drawLine();
+
+    printer.alignLeft();
+    printer.setTextSize(1, 1);
+    printer.println(`SENHA: ${senha}`);
+    printer.setTextNormal();
+    printer.println(`Caixa: ${data.cashierName}`);
+    printer.println(`Data: ${new Date().toLocaleString('pt-BR')}`);
+    printer.drawLine();
+
+    printer.bold(true);
+    printer.println("ITENS PARA PREPARO:");
+    printer.bold(false);
+    
+    data.items.forEach(item => {
+      printer.println(`${item.quantity}x ${item.name}`);
+    });
+    
+    printer.drawLine();
+    printer.println("");
+    printer.cut();
+
+    // ==========================================
+    // VIA DO CLIENTE
+    // ==========================================
+    printer.alignCenter();
+    printer.bold(true);
+    printer.setTextSize(1, 1);
+    printer.println("AMO CAFE");
+    printer.bold(false);
+    printer.setTextNormal();
+    printer.println("CNPJ: 00.000.000/0001-00");
+    printer.println("Rua Ficticia, 123 - Centro");
+    printer.drawLine();
+
+    printer.alignCenter();
+    printer.setTextSize(1, 1);
+    printer.println(`SENHA PARA RETIRADA:`);
+    printer.bold(true);
+    printer.setTextSize(2, 2);
+    printer.println(`${senha}`);
+    printer.bold(false);
+    printer.setTextNormal();
+    printer.drawLine();
+
+    printer.alignLeft();
+    printer.println(`Data: ${new Date().toLocaleString('pt-BR')}`);
+    printer.drawLine();
+
+    printer.tableCustom([
+      { text: "Qtd", align: "LEFT", width: 0.1 },
+      { text: "Item", align: "LEFT", width: 0.6 },
+      { text: "Total", align: "RIGHT", width: 0.25 }
+    ]);
+    
+    data.items.forEach(item => {
+      printer.tableCustom([
+        { text: item.quantity.toString(), align: "LEFT", width: 0.1 },
+        { text: item.name.substring(0, 20), align: "LEFT", width: 0.6 },
+        { text: `R$ ${item.subtotal.toFixed(2)}`, align: "RIGHT", width: 0.25 }
+      ]);
+    });
+    
+    printer.drawLine();
+
+    printer.alignRight();
+    printer.println(`Subtotal: R$ ${data.subtotal.toFixed(2)}`);
+    if (data.discount > 0) {
+      printer.println(`Desconto: R$ ${data.discount.toFixed(2)}`);
+    }
+    printer.bold(true);
+    printer.println(`TOTAL: R$ ${data.total.toFixed(2)}`);
+    printer.bold(false);
+    printer.drawLine();
+
+    printer.alignLeft();
+    printer.println(`Forma de Pagamento: ${data.paymentMethod}`);
+    if (data.cashReceived !== undefined && data.change !== undefined) {
+      printer.println(`Valor Recebido: R$ ${data.cashReceived.toFixed(2)}`);
+      printer.println(`Troco: R$ ${data.change.toFixed(2)}`);
+    }
+
+    printer.drawLine();
+    printer.alignCenter();
+    printer.println("Aguarde ser chamado pela senha!");
+    printer.println("Obrigado pela preferencia!");
+
+    printer.cut();
+
+    if (data.paymentMethod === 'Dinheiro') {
+      printer.openCashDrawer();
+    }
+
+    // Pega o buffer cru de comandos e envia direto pelo Windows
+    let buffer = printer.getBuffer();
+    await printBuffer(buffer);
+    
+    return res.json({ success: true, message: "Impresso com sucesso (2 Vias)." });
+
+  } catch (error) {
+    console.error("Erro na impressão:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// 2. Rota para ABRIR GAVETA avulsa (ex: sangria)
+app.post('/drawer', async (req, res) => {
+  try {
+    let printer = getPrinter();
+    printer.openCashDrawer();
+    
+    let buffer = printer.getBuffer();
+    await printBuffer(buffer);
+
+    return res.json({ success: true, message: "Gaveta aberta." });
+  } catch (error) {
+    console.error("Erro ao abrir gaveta:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+const PORT = 3001;
+app.listen(PORT, () => {
+  console.log(`=====================================`);
+  console.log(`🖨️ AMO CAFE - Servidor de Impressão`);
+  console.log(`Porta: ${PORT}`);
+  console.log(`Aguardando conexões do PDV Web...`);
+  console.log(`=====================================`);
+});
