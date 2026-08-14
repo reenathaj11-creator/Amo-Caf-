@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Mail, Lock, LogIn } from 'lucide-react';
 import { supabase } from '@/services/supabase/client';
 
+import loginBg from '@/assets/login-bg-dark.jpg';
+
 export function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -70,7 +72,7 @@ export function Login() {
         
         {/* A imagem define o tamanho real do contêiner */}
         <img 
-          src="/src/assets/login-bg-dark.jpg" 
+          src={loginBg} 
           alt="Login Amo Café" 
           className="block w-auto max-w-full h-auto max-h-[95vh] object-contain"
         />
