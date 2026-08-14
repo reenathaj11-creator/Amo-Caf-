@@ -50,7 +50,7 @@ export function TopHeader() {
         </div>
         
         {/* Centro - Navegação */}
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden lg:flex flex-1 justify-center items-center gap-1 overflow-x-auto mx-4 [&::-webkit-scrollbar]:hidden">
           <NavItem icon={<ShoppingBag className="w-5 h-5" />} label="PDV" to="/pos" />
           {role !== 'pdv' && (
             <>
