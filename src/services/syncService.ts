@@ -1,5 +1,4 @@
 import { db } from '@/lib/db';
-import { supabase } from '@/lib/supabase';
 
 class SyncService {
   private isSyncing = false;

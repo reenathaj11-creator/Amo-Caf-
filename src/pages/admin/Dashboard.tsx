@@ -143,11 +143,11 @@ export function Dashboard() {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {categoryData.map((entry, index) => (
+                    {categoryData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2).replace('.', ',')}`} />
+                  <Tooltip formatter={(value: any) => `R$ ${Number(value).toFixed(2).replace('.', ',')}`} />
                   <Legend verticalAlign="bottom" height={36}/>
                 </PieChart>
               </ResponsiveContainer>
@@ -173,7 +173,7 @@ export function Dashboard() {
                   <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12, fill: '#475569' }} />
                   <Tooltip 
                     cursor={{fill: '#F1F5F9'}} 
-                    formatter={(value: number, name: string, props: any) => [value + ' un.', props.payload.fullName]}
+                    formatter={(value: any, _: any, props: any) => [`R$ ${Number(value).toFixed(2)}`, props.payload.productName]}
                   />
                   <Bar dataKey="qtd" fill="#D97706" radius={[0, 4, 4, 0]} barSize={24} />
                 </BarChart>
