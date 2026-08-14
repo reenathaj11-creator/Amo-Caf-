@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, ShoppingCart, TrendingUp, Users, Loader2 } from "lucide-react";
 import { supabase } from "@/services/supabase/client";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { useCashRegister } from "@/contexts/CashRegisterContext";
 
 export function Dashboard() {
+  const { isOpen } = useCashRegister();
   const [totalFaturamento, setTotalFaturamento] = useState(0);
   const [totalPedidos, setTotalPedidos] = useState(0);
   const [ticketMedio, setTicketMedio] = useState(0);
@@ -117,7 +119,7 @@ export function Dashboard() {
           icon={Users} 
           trend="" 
         />
-        <StatCard title="Caixa" value="Aberto" icon={Package} trend="" />
+        <StatCard title="Caixa" value={isOpen ? "Aberto" : "Fechado"} icon={Package} trend="" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
