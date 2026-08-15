@@ -21,10 +21,14 @@ export function Dashboard() {
       try {
         setLoading(true);
         
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
         // 1. Fetch Sales Basic Info
         const { data: sales, error: salesError } = await supabase
           .from('sales')
-          .select('id, total_amount, status');
+          .select('id, total_amount, status')
+          .gte('created_at', today.toISOString());
 
         if (salesError) throw salesError;
 
@@ -41,13 +45,15 @@ export function Dashboard() {
           .select(`
             quantity,
             total_price,
+            sales!inner(created_at),
             products (
               name,
               categories (
                 name
               )
             )
-          `);
+          `)
+          .gte('sales.created_at', today.toISOString());
 
         if (itemsError) throw itemsError;
 

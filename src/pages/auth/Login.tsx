@@ -68,88 +68,96 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-2 sm:p-6 font-sans">
+    <div className="min-h-screen bg-[#0a0a0a] flex font-sans">
       
-      {/* Contêiner que abraça exatamente o tamanho da imagem, garantindo que NUNCA haja corte */}
-      <div className="relative inline-block max-w-full max-h-[95vh] rounded-[2rem] overflow-hidden shadow-2xl">
-        
-        {/* A imagem define o tamanho real do contêiner */}
+      {/* Esquerda - Imagem Decorativa (Apenas Desktop) */}
+      <div className="hidden lg:flex lg:w-1/2 xl:w-7/12 relative">
         <img 
           src={loginBg} 
           alt="Login Amo Café" 
-          className="block w-auto max-w-full h-auto max-h-[95vh] object-contain"
+          className="absolute inset-0 w-full h-full object-cover"
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className="absolute bottom-12 left-12 xl:bottom-20 xl:left-20 text-white">
+           <div className="w-16 h-16 rounded-full border border-white/40 flex flex-col items-center justify-center mb-4 bg-white/10 backdrop-blur-md shadow-inner">
+             <h1 className="text-sm font-semibold text-white">AMO<span className="text-brand-400">♥</span></h1>
+             <p className="text-[10px] italic text-brand-300">cafe+</p>
+           </div>
+           <h2 className="text-4xl xl:text-5xl font-bold tracking-tight mb-2">Amo Café Gestão</h2>
+           <p className="text-lg xl:text-xl text-white/80 max-w-md">O sistema completo para gerenciar e escalar sua cafeteria com eficiência.</p>
+        </div>
+      </div>
 
-        {/* Camada do Formulário Absoluta alinhada perfeitamente na imagem */}
-        <div className="absolute inset-y-0 right-0 w-[45%] flex flex-col justify-center px-4 sm:px-8 lg:px-12 xl:px-16 pb-8">
+      {/* Direita - Formulário de Login */}
+      <div className="w-full lg:w-1/2 xl:w-5/12 flex items-center justify-center p-6 sm:p-12 relative">
+        
+        {/* Fundo escuro com leve blur para caso seja mobile (terá background diferente se quisermos, mas aqui mantemos clean) */}
+        <div className="w-full max-w-[420px] mx-auto bg-white/5 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none border border-white/10 lg:border-none p-8 sm:p-10 rounded-[2rem] lg:rounded-none shadow-2xl lg:shadow-none">
           
-          <div className="w-full max-w-[400px] mx-auto bg-white/10 backdrop-blur-xl border border-white/10 p-6 sm:p-10 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]">
+          <div className="text-center mb-8 lg:mb-10">
+            <div className="lg:hidden w-16 h-16 rounded-full border border-white/40 flex flex-col items-center justify-center mx-auto mb-4 bg-white/5 backdrop-blur-sm shadow-inner">
+               <h1 className="text-sm font-semibold text-white">AMO<span className="text-brand-400">♥</span></h1>
+               <p className="text-[10px] italic text-brand-300">cafe+</p>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Bem-vindo de volta!</h2>
+            <p className="text-white/60 mt-2 font-medium text-sm">Acesse sua conta para continuar.</p>
+          </div>
+
+          <div className="space-y-5 sm:space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-white/90 ml-1">E-mail</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-3.5 h-5 w-5 text-brand-400" />
+                <Input 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Ex: pdv@amocafe.com" 
+                  className="h-12 pl-12 border-white/20 focus-visible:ring-brand-400 rounded-2xl bg-white/10 lg:bg-white/5 font-medium text-white placeholder:text-white/40 text-sm" 
+                />
+              </div>
+              <p className="text-[11px] text-brand-400/80 font-medium pt-1 ml-1">*Dica: Use "pdv" no email para simular perfil de Caixa</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-white/90 ml-1">Senha</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-3.5 h-5 w-5 text-brand-400" />
+                <Input 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••" 
+                  className="h-12 pl-12 border-white/20 focus-visible:ring-brand-400 rounded-2xl bg-white/10 lg:bg-white/5 font-medium text-white placeholder:text-white/40 tracking-widest text-sm" 
+                  onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                />
+              </div>
+            </div>
             
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-white/40 flex flex-col items-center justify-center mx-auto mb-3 bg-white/5 backdrop-blur-sm shadow-inner">
-                 <h1 className="text-sm sm:text-lg font-semibold text-white">AMO<span className="text-brand-400">♥</span></h1>
-                 <p className="text-[10px] sm:text-xs italic text-brand-300">cafe+</p>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">Bem-vindo de volta!</h2>
-              <p className="text-brand-300 mt-1 font-medium text-xs sm:text-sm">Acesse sua conta para continuar.</p>
+            <div className="pt-4">
+              {errorMsg && (
+                <p className="text-red-400 text-sm text-center mb-4 font-semibold bg-red-500/10 py-3 rounded-xl border border-red-500/20">{errorMsg}</p>
+              )}
+              <Button 
+                onClick={handleLogin}
+                disabled={loading}
+                className="w-full h-14 text-lg font-bold bg-brand-500 hover:bg-brand-600 text-white rounded-2xl shadow-[0_4px_20px_0_rgba(201,91,100,0.4)] transition-all hover:-translate-y-0.5 group disabled:opacity-70 disabled:hover:translate-y-0"
+              >
+                <LogIn className="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform" />
+                {loading ? 'Entrando...' : 'Entrar no Sistema'}
+              </Button>
+            </div>
+            
+            <div className="text-center pt-2">
+              <button className="text-sm font-medium text-white/60 hover:text-white transition-colors">
+                Esqueceu sua senha?
+              </button>
             </div>
 
-            <div className="space-y-4 sm:space-y-6">
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-semibold text-white/90 ml-1 drop-shadow-sm">E-mail</label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-3.5 h-4 w-4 sm:h-5 sm:w-5 text-brand-400" />
-                  <Input 
-                    type="email" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Ex: pdv@amocafe.com" 
-                    className="h-11 sm:h-12 pl-10 sm:pl-12 border-white/20 focus-visible:ring-brand-400 rounded-2xl bg-white/20 backdrop-blur-sm font-medium text-white placeholder:text-white/60 shadow-inner text-sm" 
-                  />
-                </div>
-                <p className="text-[10px] sm:text-[11px] text-brand-300 font-medium pt-1 ml-1 drop-shadow-sm">*Dica: Use "pdv" no email para simular perfil de Caixa</p>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-semibold text-white/90 ml-1 drop-shadow-sm">Senha</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-3.5 h-4 w-4 sm:h-5 sm:w-5 text-brand-400" />
-                  <Input 
-                    type="password" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••" 
-                    className="h-11 sm:h-12 pl-10 sm:pl-12 border-white/20 focus-visible:ring-brand-400 rounded-2xl bg-white/20 backdrop-blur-sm font-medium text-white placeholder:text-white/60 tracking-widest shadow-inner text-sm" 
-                    onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                  />
-                </div>
-              </div>
-              
-              <div className="pt-2 sm:pt-4">
-                {errorMsg && (
-                  <p className="text-red-400 text-sm text-center mb-3 font-semibold bg-red-500/10 py-2 rounded-lg border border-red-500/20">{errorMsg}</p>
-                )}
-                <Button 
-                  onClick={handleLogin}
-                  disabled={loading}
-                  className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold bg-brand-500 hover:bg-brand-600 text-white rounded-2xl shadow-[0_4px_14px_0_rgba(201,91,100,0.39)] transition-all hover:-translate-y-0.5 group border border-brand-400/50 disabled:opacity-70 disabled:hover:translate-y-0"
-                >
-                  <LogIn className="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:translate-x-1 transition-transform" />
-                  {loading ? 'Entrando...' : 'Entrar no Sistema'}
-                </Button>
-              </div>
-              
-              <div className="text-center pt-1 sm:pt-2">
-                <button className="text-xs sm:text-sm font-medium text-white/70 hover:text-white transition-colors">
-                  Esqueceu sua senha?
-                </button>
-              </div>
-
-            </div>
           </div>
         </div>
-
       </div>
+
     </div>
   );
 }

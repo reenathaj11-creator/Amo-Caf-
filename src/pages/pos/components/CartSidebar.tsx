@@ -4,7 +4,15 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Trash2, Plus, Minus, CreditCard, X, ShoppingBag } from "lucide-react"
 import { useKeyPress } from "@/hooks/useKeyPress"
 
-export function CartSidebar({ onCheckout }: { onCheckout?: () => void }) {
+import { cn } from "@/lib/utils"
+
+interface CartSidebarProps {
+  onCheckout?: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function CartSidebar({ onCheckout, isOpen, onClose }: CartSidebarProps) {
   const { cart, updateQuantity, removeFromCart, clearCart, subtotal, total } = usePOS();
 
   useKeyPress('Escape', () => {
@@ -12,12 +20,34 @@ export function CartSidebar({ onCheckout }: { onCheckout?: () => void }) {
   });
 
   return (
-    <aside className="w-[400px] bg-white border border-coffee-100 rounded-3xl my-6 mr-6 flex flex-col h-[calc(100%-48px)] shadow-sm overflow-hidden z-10 shrink-0">
-      <div className="p-6 bg-white flex items-center justify-between">
-        <h2 className="font-bold text-xl flex items-center gap-3 text-coffee-950">
-          <ShoppingBag className="w-5 h-5 text-brand-500" />
-          Pedido Atual
-        </h2>
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity" 
+          onClick={onClose}
+        />
+      )}
+
+      <aside className={cn(
+        "bg-white flex flex-col shadow-sm overflow-hidden z-50 shrink-0",
+        // Desktop styles
+        "lg:static lg:w-[400px] lg:border lg:border-coffee-100 lg:rounded-3xl lg:my-6 lg:mr-6 lg:h-[calc(100%-48px)] lg:transform-none lg:transition-none",
+        // Mobile styles
+        "fixed inset-y-0 right-0 w-full sm:w-[400px] transition-transform duration-300 ease-in-out",
+        isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+      )}>
+        <div className="p-4 lg:p-6 bg-white flex items-center justify-between border-b lg:border-none border-coffee-100">
+          <div className="flex items-center gap-3">
+            {/* Mobile close button */}
+            <Button variant="ghost" size="icon" onClick={onClose} className="lg:hidden text-coffee-400 hover:text-coffee-600 -ml-2">
+              <X className="w-5 h-5" />
+            </Button>
+            <h2 className="font-bold text-lg lg:text-xl flex items-center gap-2 lg:gap-3 text-coffee-950">
+              <ShoppingBag className="w-4 h-4 lg:w-5 lg:h-5 text-brand-500" />
+              Pedido Atual
+            </h2>
+          </div>
         <span className="bg-brand-50 text-brand-600 text-xs py-1 px-3 rounded-full font-bold">
           {cart.length} {cart.length === 1 ? 'item' : 'itens'}
         </span>
@@ -117,6 +147,7 @@ export function CartSidebar({ onCheckout }: { onCheckout?: () => void }) {
         </Button>
       </div>
     </aside>
+    </>
   )
 }
 
