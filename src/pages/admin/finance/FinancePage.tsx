@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/services/supabase/client';
-import { StatCard } from '../components/StatCard';
 import { Button } from '@/components/ui/button';
 import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2 } from 'lucide-react';
 import { ExpenseModal } from './components/ExpenseModal';
