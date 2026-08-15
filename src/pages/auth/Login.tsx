@@ -41,10 +41,13 @@ export function Login() {
          } else {
            // Se o perfil não existir ainda (ex: acabou de criar a conta no auth), 
            // cria um perfil padrão para ele
+           const isPdvEmail = authData.user.email?.toLowerCase().includes('pdv');
+           const initialRole = isPdvEmail ? 'pdv' : 'admin';
+           
            await supabase.from('profiles').insert([
-             { id: authData.user.id, email: authData.user.email, role: 'admin' }
+             { id: authData.user.id, email: authData.user.email, role: initialRole }
            ]);
-           role = 'admin'; // Assumindo admin pro primeiro usuário criado
+           role = initialRole;
          }
       }
 

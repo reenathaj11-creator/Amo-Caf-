@@ -7,6 +7,7 @@ import { CategoriesList } from './categories/CategoriesList';
 import { SalesList } from './sales/SalesList';
 import { CustomersList } from './customers/CustomersList';
 import { ReportsPage } from './reports/ReportsPage';
+import { FinancePage } from './finance/FinancePage';
 
 export function AdminLayout() {
   return (
@@ -21,6 +22,7 @@ export function AdminLayout() {
             <Route path="/vendas" element={<SalesList />} />
             <Route path="/clientes/*" element={<CustomersList />} />
             <Route path="/relatorios" element={<ReportsPage />} />
+            <Route path="/financeiro/*" element={<FinancePage />} />
             <Route path="*" element={<div className="text-slate-500">Página em construção</div>} />
           </Routes>
         </main>

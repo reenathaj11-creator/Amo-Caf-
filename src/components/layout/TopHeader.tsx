@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LockKeyhole, LockKeyholeOpen, ShoppingBag, Package, BarChart2, Users, Settings, Bell, Tag, LayoutDashboard, Menu, X, LogOut, ChevronDown } from 'lucide-react';
+import { LockKeyhole, LockKeyholeOpen, ShoppingBag, Package, BarChart2, Users, Settings, Tag, LayoutDashboard, Menu, X, LogOut, ChevronDown, CircleDollarSign } from 'lucide-react';
 import { useCashRegister } from '@/contexts/CashRegisterContext';
 import { CashRegisterModal } from '@/pages/pos/components/CashRegisterModal';
 import { supabase } from '@/services/supabase/client';
@@ -61,6 +61,7 @@ export function TopHeader() {
           <NavItem icon={<BarChart2 className="w-5 h-5" />} label="Vendas" to="/admin/vendas" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem icon={<Users className="w-5 h-5" />} label="Clientes" to="/admin/clientes" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem icon={<BarChart2 className="w-5 h-5" />} label="Relatórios" to="/admin/relatorios" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem icon={<CircleDollarSign className="w-5 h-5" />} label="Financeiro" to="/admin/financeiro" onClick={() => setIsMobileMenuOpen(false)} />
         </>
       )}
     </>
@@ -119,16 +120,9 @@ export function TopHeader() {
             {isOpen ? <LockKeyholeOpen className="w-4 h-4" /> : <LockKeyhole className="w-4 h-4" />}
           </Button>
 
-          <div className="hidden md:flex items-center gap-2 text-sm font-semibold text-emerald-600">
+          <div className="hidden md:flex items-center gap-2 text-sm font-semibold text-emerald-600 mr-2">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             Online
-          </div>
-          
-          <div className="relative cursor-pointer text-coffee-400 hover:text-coffee-600 hidden sm:block">
-            <Bell className="w-6 h-6" />
-            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[10px] font-bold text-white">
-              2
-            </span>
           </div>
 
           <DropdownMenu>
