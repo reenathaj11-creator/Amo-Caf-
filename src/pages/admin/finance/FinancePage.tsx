@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/services/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2 } from 'lucide-react';
 import { TransactionModal } from './components/TransactionModal';
 
@@ -11,25 +12,49 @@ export function FinancePage() {
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const currentMonthString = new Date().toISOString().substring(0, 7);
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthString);
 
   const fetchFinancialData = async () => {
     try {
       setLoading(true);
 
+      let startDateStr = '';
+      let endDateStr = '';
+      let startDay = '';
+      let endDay = '';
+      
+      if (selectedMonth) {
+        const [year, month] = selectedMonth.split('-');
+        startDateStr = `${selectedMonth}-01T00:00:00.000Z`;
+        // O Date usa zero-index pro mês, mas passando Number(month) estamos pedindo o mês +1
+        endDateStr = new Date(Number(year), Number(month), 1).toISOString();
+        
+        startDay = `${selectedMonth}-01`;
+        const lastDayObj = new Date(Number(year), Number(month), 0);
+        endDay = lastDayObj.toISOString().split('T')[0];
+      }
+
       // 1. Buscar todas as vendas (Receita de PDV)
-      const { data: salesData, error: salesError } = await supabase
-        .from('sales')
-        .select('total');
+      let salesQuery = supabase.from('sales').select('total_amount');
+      if (selectedMonth) {
+        salesQuery = salesQuery.gte('created_at', startDateStr).lt('created_at', endDateStr);
+      }
+      
+      const { data: salesData, error: salesError } = await salesQuery;
       
       if (salesError) throw salesError;
-      const pdvTotal = salesData?.reduce((acc, curr) => acc + (curr.total || 0), 0) || 0;
+      const pdvTotal = salesData?.reduce((acc, curr) => acc + (curr.total_amount || 0), 0) || 0;
       setPosRevenue(pdvTotal);
 
       // 2. Buscar todas as transações manuais (Receitas e Despesas do Livro Caixa)
-      const { data: txData, error: txError } = await supabase
-        .from('transactions')
-        .select('*')
-        .order('date', { ascending: false });
+      let txQuery = supabase.from('transactions').select('*').order('date', { ascending: false });
+      if (selectedMonth) {
+        txQuery = txQuery.gte('date', startDay).lte('date', endDay);
+      }
+      
+      const { data: txData, error: txError } = await txQuery;
 
       if (txError) {
         console.error('Tabela transactions pode não existir:', txError.message);
@@ -52,7 +77,7 @@ export function FinancePage() {
 
   useEffect(() => {
     fetchFinancialData();
-  }, []);
+  }, [selectedMonth]);
 
   const handleDeleteTransaction = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir este lançamento?')) return;
@@ -77,13 +102,28 @@ export function FinancePage() {
           <h2 className="text-2xl font-bold text-coffee-950">Livro Caixa (Financeiro)</h2>
           <p className="text-coffee-600">Acompanhamento completo de entradas, saídas e lucro.</p>
         </div>
-        <Button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-brand-500 hover:bg-brand-600 text-white rounded-xl shadow-sm gap-2 font-bold"
-        >
-          <Plus className="w-5 h-5" />
-          Novo Lançamento
-        </Button>
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <Input 
+            type="month" 
+            value={selectedMonth} 
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="w-[140px] h-10 rounded-xl border-coffee-200"
+          />
+          <Button 
+            variant={selectedMonth === '' ? 'default' : 'outline'}
+            onClick={() => setSelectedMonth('')}
+            className={`h-10 rounded-xl font-semibold border-coffee-200 transition-colors ${selectedMonth === '' ? 'bg-coffee-900 text-white hover:bg-coffee-800' : 'text-coffee-600 hover:bg-coffee-50'}`}
+          >
+            Ver Tudo
+          </Button>
+          <Button 
+            onClick={() => setIsModalOpen(true)}
+            className="h-10 bg-brand-500 hover:bg-brand-600 text-white rounded-xl shadow-sm gap-2 font-bold ml-auto sm:ml-2"
+          >
+            <Plus className="w-5 h-5" />
+            Novo Lançamento
+          </Button>
+        </div>
       </div>
 
       {loading ? (

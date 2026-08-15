@@ -69,7 +69,7 @@ export function TopHeader() {
 
   return (
     <>
-      <header className="bg-white h-[72px] flex justify-between items-center px-4 sm:px-6 shrink-0 z-50 relative border-b border-coffee-100 shadow-sm">
+      <header className="bg-white h-[72px] flex justify-between items-center px-4 sm:px-6 shrink-0 z-50 relative border-b border-coffee-100 shadow-sm print:hidden">
         
         {/* Esquerda - Mobile Menu Toggle & Logo */}
         <div className="flex items-center gap-3 min-w-[150px] sm:min-w-[200px]">

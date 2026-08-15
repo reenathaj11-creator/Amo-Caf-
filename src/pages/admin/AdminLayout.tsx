@@ -11,10 +11,10 @@ import { FinancePage } from './finance/FinancePage';
 
 export function AdminLayout() {
   return (
-      <div className="flex flex-col h-screen bg-[#FCFAFA] font-sans">
+      <div className="flex flex-col h-screen bg-[#FCFAFA] font-sans print:h-auto print:block print:bg-white">
         <TopHeader />
 
-        <main className="flex-1 overflow-auto p-8">
+        <main className="flex-1 overflow-auto p-8 print:overflow-visible print:p-0">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/produtos/*" element={<ProductsList />} />
