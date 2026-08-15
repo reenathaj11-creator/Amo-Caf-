@@ -1,9 +1,18 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LockKeyhole, LockKeyholeOpen, ShoppingBag, Package, BarChart2, Users, Settings, Bell, Tag, LayoutDashboard, Menu, X } from 'lucide-react';
+import { LockKeyhole, LockKeyholeOpen, ShoppingBag, Package, BarChart2, Users, Settings, Bell, Tag, LayoutDashboard, Menu, X, LogOut, ChevronDown } from 'lucide-react';
 import { useCashRegister } from '@/contexts/CashRegisterContext';
 import { CashRegisterModal } from '@/pages/pos/components/CashRegisterModal';
+import { supabase } from '@/services/supabase/client';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function NavItem({ icon, label, to, exact = false, onClick }: { icon: React.ReactNode, label: string, to: string, exact?: boolean, onClick?: () => void }) {
   const location = useLocation();
@@ -29,9 +38,17 @@ export function TopHeader() {
   const { isOpen } = useCashRegister();
   const [isCashModalOpen, setIsCashModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const role = localStorage.getItem('@amocafe:role') || 'admin';
   const userName = localStorage.getItem('@amocafe:user') || 'Felipe';
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem('@amocafe:role');
+    localStorage.removeItem('@amocafe:user');
+    navigate('/login');
+  };
 
   const NavigationItems = () => (
     <>
@@ -44,7 +61,6 @@ export function TopHeader() {
           <NavItem icon={<BarChart2 className="w-5 h-5" />} label="Vendas" to="/admin/vendas" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem icon={<Users className="w-5 h-5" />} label="Clientes" to="/admin/clientes" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem icon={<BarChart2 className="w-5 h-5" />} label="Relatórios" to="/admin/relatorios" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem icon={<Settings className="w-5 h-5" />} label="Configurações" to="/admin/configuracoes" onClick={() => setIsMobileMenuOpen(false)} />
         </>
       )}
     </>
@@ -115,15 +131,45 @@ export function TopHeader() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3 border-l border-coffee-100 pl-3 sm:pl-6 ml-1 sm:ml-2">
-            <div className="text-right hidden xl:block">
-              <p className="text-sm font-bold text-coffee-950 leading-tight">{userName.split('@')[0]}</p>
-              <p className="text-xs font-medium text-coffee-400">{role === 'pdv' ? 'Caixa' : 'Administrador'}</p>
-            </div>
-            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold text-base sm:text-lg shadow-sm shrink-0">
-              {userName.charAt(0).toUpperCase()}
-            </div>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex items-center gap-2 sm:gap-3 border-l border-coffee-100 pl-3 sm:pl-6 ml-1 sm:ml-2 cursor-pointer hover:bg-coffee-50 p-1.5 rounded-full sm:rounded-xl transition-colors">
+                <div className="text-right hidden xl:block">
+                  <p className="text-sm font-bold text-coffee-950 leading-tight">{userName.split('@')[0]}</p>
+                  <p className="text-xs font-medium text-coffee-400">{role === 'pdv' ? 'Caixa' : 'Administrador'}</p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold text-base sm:text-lg shadow-sm shrink-0">
+                    {userName.charAt(0).toUpperCase()}
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-coffee-400 hidden xl:block" />
+                </div>
+              </div>
+            </DropdownMenuTrigger>
+            
+            <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl border-coffee-100 shadow-xl p-2 bg-white">
+              <DropdownMenuLabel className="font-bold text-coffee-950">Minha Conta</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-coffee-100" />
+              
+              {role !== 'pdv' && (
+                <DropdownMenuItem 
+                  className="gap-2 cursor-pointer rounded-lg text-coffee-700 focus:bg-brand-50 focus:text-brand-700 py-2.5"
+                  onClick={() => navigate('/admin/configuracoes')}
+                >
+                  <Settings className="w-4 h-4" />
+                  <span>Configurações</span>
+                </DropdownMenuItem>
+              )}
+              
+              <DropdownMenuItem 
+                className="gap-2 cursor-pointer rounded-lg text-red-600 focus:bg-red-50 focus:text-red-700 py-2.5 mt-1"
+                onClick={handleLogout}
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sair do Sistema</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
         </div>
       </header>
