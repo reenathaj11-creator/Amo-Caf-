@@ -18,7 +18,7 @@ function getPrinter() {
   return new ThermalPrinter({
     type: PrinterTypes.EPSON,
     interface: 'tcp://127.0.0.1:9090', // "Dummy" interface só para enganar a biblioteca. Não vai conectar aqui.
-    characterSet: 'PC860_POR', // Necessário para a biblioteca não dar erro de undefined
+    characterSet: 'PC860_PORTUGUESE', // Necessário para a biblioteca não dar erro de undefined
     removeSpecialCharacters: false,
     lineCharacter: "-",
   });
@@ -89,7 +89,7 @@ app.post('/print', async (req, res) => {
     printer.println("AMO CAFE +");
     printer.bold(false);
     printer.setTextNormal();
-    printer.println("Rua Santos Dumont, 888 - Niterói");
+    printer.println("Rua Santos Dumont, 888 - Niteroi");
     printer.drawLine();
 
     printer.alignCenter();
@@ -181,7 +181,7 @@ app.post('/drawer', async (req, res) => {
 const PORT = 3001;
 app.listen(PORT, () => {
   console.log(`=====================================`);
-  console.log(`🖨️ AMO CAFE - Servidor de Impressão`);
+  console.log(`🖨️ AMO CAFE + (Versão Atualizada!)`);
   console.log(`Porta: ${PORT}`);
   console.log(`Aguardando conexões do PDV Web...`);
   console.log(`=====================================`);
