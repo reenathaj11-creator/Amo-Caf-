@@ -34,21 +34,24 @@ export function CategoryNav({ activeCategory, onSelect }: CategoryNavProps) {
       <ScrollArea className="whitespace-nowrap flex-1">
         <div className="flex w-max space-x-2">
           {allCategories.map((category) => {
-            const Icon = category.name === 'Todos' ? LayoutGrid : getIconComponent(category.icon);
+            const isTodos = category.name === 'Todos';
+            const Icon = isTodos ? LayoutGrid : getIconComponent(category.icon);
             const isActive = activeCategory === category.name;
             return (
               <button
                 key={category.id}
                 onClick={() => onSelect(category.name)}
+                title={isTodos ? "Todas as Categorias" : undefined}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all select-none",
+                  "flex items-center justify-center transition-all select-none rounded-xl font-bold",
+                  isTodos ? "w-10 h-10 shrink-0" : "gap-2 px-5 py-2.5 text-sm",
                   isActive
                     ? "bg-brand-500 text-white shadow-md"
                     : "bg-transparent text-coffee-600 hover:bg-cream-50 hover:text-coffee-900"
                 )}
               >
-                <Icon className={cn("w-4 h-4", isActive ? "text-white" : "text-coffee-400")} />
-                {category.name}
+                <Icon className={cn(isTodos ? "w-5 h-5" : "w-4 h-4", isActive ? "text-white" : "text-coffee-400")} />
+                {!isTodos && category.name}
               </button>
             );
           })}
