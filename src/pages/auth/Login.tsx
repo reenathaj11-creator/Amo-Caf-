@@ -71,30 +71,23 @@ export function Login() {
     <div className="min-h-screen bg-[#0a0a0a] flex font-sans">
       
       {/* Esquerda - Imagem Decorativa (Apenas Desktop) */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-7/12 relative">
-        <img 
-          src={loginBg} 
-          alt="Login Amo Café" 
-          className="absolute inset-0 w-full h-full object-cover"
+      {/* Usando w-7/12 (ou maior) no lugar de w-1/2 para evitar que a imagem fique tão "zoomed in" */}
+      <div className="hidden lg:flex lg:w-7/12 xl:w-8/12 relative bg-black">
+        <div 
+          className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${loginBg})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-        <div className="absolute bottom-12 left-12 xl:bottom-20 xl:left-20 text-white">
-           <div className="w-16 h-16 rounded-full border border-white/40 flex flex-col items-center justify-center mb-4 bg-white/10 backdrop-blur-md shadow-inner">
-             <h1 className="text-sm font-semibold text-white">AMO<span className="text-brand-400">♥</span></h1>
-             <p className="text-[10px] italic text-brand-300">cafe+</p>
-           </div>
-           <h2 className="text-4xl xl:text-5xl font-bold tracking-tight mb-2">Amo Café Gestão</h2>
-           <p className="text-lg xl:text-xl text-white/80 max-w-md">O sistema completo para gerenciar e escalar sua cafeteria com eficiência.</p>
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
       </div>
 
       {/* Direita - Formulário de Login */}
-      <div className="w-full lg:w-1/2 xl:w-5/12 flex items-center justify-center p-6 sm:p-12 relative">
+      <div className="w-full lg:w-5/12 xl:w-4/12 flex items-center justify-center p-6 sm:p-12 relative z-10">
         
-        {/* Fundo escuro com leve blur para caso seja mobile (terá background diferente se quisermos, mas aqui mantemos clean) */}
+        {/* Fundo escuro com leve blur para caso seja mobile */}
         <div className="w-full max-w-[420px] mx-auto bg-white/5 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none border border-white/10 lg:border-none p-8 sm:p-10 rounded-[2rem] lg:rounded-none shadow-2xl lg:shadow-none">
           
           <div className="text-center mb-8 lg:mb-10">
+            {/* Logo Mobile */}
             <div className="lg:hidden w-16 h-16 rounded-full border border-white/40 flex flex-col items-center justify-center mx-auto mb-4 bg-white/5 backdrop-blur-sm shadow-inner">
                <h1 className="text-sm font-semibold text-white">AMO<span className="text-brand-400">♥</span></h1>
                <p className="text-[10px] italic text-brand-300">cafe+</p>
