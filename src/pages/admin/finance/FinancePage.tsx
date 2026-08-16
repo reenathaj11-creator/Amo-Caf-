@@ -92,33 +92,6 @@ export function FinancePage() {
     }
   };
 
-  const handleResetSystem = async () => {
-    const confirm = window.prompt("ATENÇÃO PERIGO: Digite ZERAR para apagar definitivamente TODAS as Vendas, Transações e Clientes.");
-    if (confirm !== "ZERAR") return;
-    
-    try {
-      setLoading(true);
-      // O frontend tem a permissão de usuário logado para realizar os deletes
-      await supabase.from('sale_items').delete().not('id', 'is', null);
-      await supabase.from('sales').delete().not('id', 'is', null);
-      await supabase.from('transactions').delete().not('id', 'is', null);
-      await supabase.from('customers').delete().not('id', 'is', null);
-      
-      // Limpa os pedidos offline também
-      if (window.indexedDB) {
-        window.indexedDB.deleteDatabase('amocafe_pos_db');
-      }
-
-      alert("Tudo zerado com sucesso! Recarregue a página.");
-      window.location.reload();
-    } catch (error) {
-      console.error('Erro ao zerar sistema:', error);
-      alert("Houve um erro ao zerar.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const totalRevenue = posRevenue + manualRevenue;
   const netProfit = totalRevenue - totalExpenses;
 
@@ -142,14 +115,6 @@ export function FinancePage() {
             className={`h-10 rounded-xl font-semibold border-coffee-200 transition-colors ${selectedMonth === '' ? 'bg-coffee-900 text-white hover:bg-coffee-800' : 'text-coffee-600 hover:bg-coffee-50'}`}
           >
             Ver Tudo
-          </Button>
-          <Button 
-            onClick={handleResetSystem}
-            variant="destructive"
-            className="h-10 rounded-xl font-bold shadow-sm"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Zerar Tudo
           </Button>
           <Button 
             onClick={() => setIsModalOpen(true)}
