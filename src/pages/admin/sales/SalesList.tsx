@@ -114,6 +114,75 @@ export function SalesList() {
           </Table>
         </CardContent>
       </Card>
+
+      <Card className="border-none bg-white rounded-2xl shadow-sm mt-8">
+        <CardHeader>
+          <CardTitle className="text-xl text-coffee-950">Histórico de Caixa</CardTitle>
+          <CardDescription className="text-coffee-500">
+            Aberturas e fechamentos de caixa registrados no sistema.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data / Hora</TableHead>
+                <TableHead>Operador</TableHead>
+                <TableHead>Ação</TableHead>
+                <TableHead className="text-right">Valor em Caixa</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(() => {
+                const savedOps = localStorage.getItem('@amocafe:cashRegister_operations');
+                let ops = [];
+                if (savedOps) {
+                  try {
+                    ops = JSON.parse(savedOps).filter((op: any) => op.type === 'ABERTURA' || op.type === 'FECHAMENTO');
+                    // Ordenar do mais recente para o mais antigo
+                    ops.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                  } catch (e) {}
+                }
+
+                if (!ops.length) {
+                  return (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-6 text-slate-500">
+                        Nenhum evento de caixa registrado ainda.
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
+
+                return ops.map((op: any) => (
+                  <TableRow key={op.id} className="border-b border-coffee-100 hover:bg-cream-50 transition-colors">
+                    <TableCell className="font-medium text-coffee-900">
+                      {new Date(op.timestamp).toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-coffee-700 font-medium">
+                      {op.user_email?.split('@')[0] || 'Usuário Local'}
+                    </TableCell>
+                    <TableCell>
+                      {op.type === 'ABERTURA' ? (
+                        <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200">
+                          Abertura
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">
+                          Fechamento
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-coffee-950">
+                      R$ {Number(op.amount).toFixed(2).replace('.', ',')}
+                    </TableCell>
+                  </TableRow>
+                ));
+              })()}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
