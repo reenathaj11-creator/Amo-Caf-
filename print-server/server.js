@@ -70,11 +70,11 @@ app.post('/print', async (req, res) => {
 
     printer.bold(true);
     printer.println("ITENS PARA PREPARO:");
-    printer.bold(false);
     
     data.items.forEach(item => {
       printer.println(`${item.quantity}x ${item.name}`);
     });
+    printer.bold(false);
     
     printer.drawLine();
     printer.println("");
@@ -86,11 +86,10 @@ app.post('/print', async (req, res) => {
     printer.alignCenter();
     printer.bold(true);
     printer.setTextSize(1, 1);
-    printer.println("AMO CAFE");
+    printer.println("AMO CAFE +");
     printer.bold(false);
     printer.setTextNormal();
-    printer.println("CNPJ: 00.000.000/0001-00");
-    printer.println("Rua Ficticia, 123 - Centro");
+    printer.println("Rua Santos Dumont, 888 - Niterói");
     printer.drawLine();
 
     printer.alignCenter();
