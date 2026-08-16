@@ -62,9 +62,9 @@ export function CashRegisterProvider({ children }: { children: React.ReactNode }
     setOperations(prev => [...prev, operation]);
     
     if (type === 'SANGRIA' || type === 'FECHAMENTO') {
-      setCurrentBalance(prev => prev - amount);
+      setCurrentBalance((prev: number) => prev - amount);
     } else {
-      setCurrentBalance(prev => prev + amount);
+      setCurrentBalance((prev: number) => prev + amount);
     }
   };
 

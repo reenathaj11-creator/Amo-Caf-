@@ -5,8 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Mail, Lock, LogIn } from 'lucide-react';
 import { supabase } from '@/services/supabase/client';
 
-import loginBg from '@/assets/login-bg-dark.jpg';
-
 export function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
