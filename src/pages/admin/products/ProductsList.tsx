@@ -18,6 +18,7 @@ export function ProductsList() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchProducts = async () => {
     try {
@@ -29,7 +30,7 @@ export function ProductsList() {
           *,
           categories ( name )
         `)
-        .order('created_at', { ascending: false });
+        .order('name', { ascending: true });
 
       if (error) throw error;
       setProducts(data || []);
@@ -67,6 +68,11 @@ export function ProductsList() {
     setIsModalOpen(true);
   };
 
+  const filteredProducts = products.filter(p => 
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.categories?.name && p.categories.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -87,6 +93,8 @@ export function ProductsList() {
             type="search"
             placeholder="Buscar produtos..."
             className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
@@ -110,14 +118,14 @@ export function ProductsList() {
                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-brand-500 mb-2" />
                  </TableCell>
                </TableRow>
-            ) : products.length === 0 ? (
+            ) : filteredProducts.length === 0 ? (
                <TableRow>
                  <TableCell colSpan={6} className="text-center py-6 text-slate-500">
-                   Nenhum produto cadastrado.
+                   Nenhum produto encontrado.
                  </TableCell>
                </TableRow>
             ) : (
-              products.map((product) => (
+              filteredProducts.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell>
                     {product.image_url ? (

@@ -59,7 +59,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
         const { data: catData, error: catError } = await supabase
           .from('categories')
           .select('*')
-          .order('sort_order', { ascending: true });
+          .order('name', { ascending: true });
         
         if (catError) throw catError;
         setCategories(catData || []);
@@ -71,7 +71,8 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
             id, name, price, image_url, category_id,
             categories ( name )
           `)
-          .eq('active', true);
+          .eq('active', true)
+          .order('name', { ascending: true });
         
         if (prodError) throw prodError;
 
