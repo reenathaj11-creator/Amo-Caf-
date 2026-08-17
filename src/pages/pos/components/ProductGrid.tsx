@@ -14,9 +14,7 @@ export function ProductGrid({ activeCategory }: { activeCategory: string }) {
     );
   }
 
-  const filteredProducts = activeCategory === "Todos" 
-    ? products 
-    : products.filter(p => p.category === activeCategory);
+  const filteredProducts = products.filter(p => p.category === activeCategory);
 
   if (filteredProducts.length === 0) {
     return (
