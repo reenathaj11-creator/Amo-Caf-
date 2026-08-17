@@ -179,6 +179,108 @@ app.post('/drawer', async (req, res) => {
 });
 
 const PORT = 3001;
+
+// 3. Rota para imprimir RELATORIO DE FECHAMENTO
+app.post('/print-report', async (req, res) => {
+  try {
+    const data = req.body;
+    let printer = getPrinter();
+
+    printer.alignCenter();
+    printer.bold(true);
+    printer.setTextSize(1, 1);
+    printer.println("AMO CAFE +");
+    printer.setTextNormal();
+    printer.println("RELATORIO DE FECHAMENTO DE CAIXA");
+    printer.drawLine();
+
+    printer.alignLeft();
+    printer.println(`Data: ${new Date().toLocaleString('pt-BR')}`);
+    if (data.cashierName) printer.println(`Caixa: ${data.cashierName}`);
+    printer.drawLine();
+
+    printer.bold(true);
+    printer.println("RESUMO DE VENDAS");
+    printer.bold(false);
+    printer.tableCustom([
+      { text: "Dinheiro:", align: "LEFT", width: 0.5 },
+      { text: `R$ ${data.dinheiro.toFixed(2)}`, align: "RIGHT", width: 0.5 }
+    ]);
+    printer.tableCustom([
+      { text: "PIX:", align: "LEFT", width: 0.5 },
+      { text: `R$ ${data.pix.toFixed(2)}`, align: "RIGHT", width: 0.5 }
+    ]);
+    printer.tableCustom([
+      { text: "Cartoes:", align: "LEFT", width: 0.5 },
+      { text: `R$ ${data.cartoes.toFixed(2)}`, align: "RIGHT", width: 0.5 }
+    ]);
+    if (data.naConta > 0) {
+      printer.tableCustom([
+        { text: "Na Conta (Fiado):", align: "LEFT", width: 0.5 },
+        { text: `R$ ${data.naConta.toFixed(2)}`, align: "RIGHT", width: 0.5 }
+      ]);
+    }
+    printer.drawLine();
+    printer.bold(true);
+    printer.tableCustom([
+      { text: "TOTAL DE VENDAS:", align: "LEFT", width: 0.5 },
+      { text: `R$ ${data.totalVendas.toFixed(2)}`, align: "RIGHT", width: 0.5 }
+    ]);
+    printer.bold(false);
+    printer.drawLine();
+
+    printer.bold(true);
+    printer.println("MOVIMENTACAO DE GAVETA");
+    printer.bold(false);
+    printer.tableCustom([
+      { text: "Abertura:", align: "LEFT", width: 0.6 },
+      { text: `R$ ${data.abertura.toFixed(2)}`, align: "RIGHT", width: 0.4 }
+    ]);
+    printer.tableCustom([
+      { text: "Suprimento (+):", align: "LEFT", width: 0.6 },
+      { text: `R$ ${data.suprimentos.toFixed(2)}`, align: "RIGHT", width: 0.4 }
+    ]);
+    printer.tableCustom([
+      { text: "Sangria (-):", align: "LEFT", width: 0.6 },
+      { text: `R$ ${data.sangrias.toFixed(2)}`, align: "RIGHT", width: 0.4 }
+    ]);
+    printer.drawLine();
+    
+    printer.bold(true);
+    printer.tableCustom([
+      { text: "SALDO ESPERADO GAVETA:", align: "LEFT", width: 0.6 },
+      { text: `R$ ${data.saldoEsperado.toFixed(2)}`, align: "RIGHT", width: 0.4 }
+    ]);
+    printer.tableCustom([
+      { text: "SALDO INFORMADO GAVETA:", align: "LEFT", width: 0.6 },
+      { text: `R$ ${data.saldoInformado.toFixed(2)}`, align: "RIGHT", width: 0.4 }
+    ]);
+    printer.bold(false);
+
+    let diferenca = data.saldoInformado - data.saldoEsperado;
+    if (diferenca !== 0) {
+       printer.drawLine();
+       printer.tableCustom([
+         { text: "DIFERENCA:", align: "LEFT", width: 0.5 },
+         { text: `R$ ${diferenca.toFixed(2)}`, align: "RIGHT", width: 0.5 }
+       ]);
+    }
+
+    printer.drawLine();
+    printer.println("");
+    printer.cut();
+
+    let buffer = printer.getBuffer();
+    await printBuffer(buffer);
+    
+    return res.json({ success: true, message: "Relatorio impresso com sucesso." });
+
+  } catch (error) {
+    console.error("Erro na impressão do relatorio:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`=====================================`);
   console.log(`🖨️ AMO CAFE + (Versão Atualizada!)`);

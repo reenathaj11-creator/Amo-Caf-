@@ -10,6 +10,20 @@ export interface PrintReceiptParams {
   cashierName: string;
 }
 
+export interface PrintReportParams {
+  cashierName: string;
+  dinheiro: number;
+  pix: number;
+  cartoes: number;
+  naConta: number;
+  totalVendas: number;
+  abertura: number;
+  suprimentos: number;
+  sangrias: number;
+  saldoEsperado: number;
+  saldoInformado: number;
+}
+
 const PRINT_SERVER_URL = "http://localhost:3001";
 
 class PrinterService {
@@ -43,6 +57,23 @@ class PrinterService {
       return true;
     } catch (error) {
       console.warn("⚠️ Servidor não encontrado. Simulando abertura de gaveta.");
+      return false;
+    }
+  }
+
+  async printClosingReport(params: PrintReportParams): Promise<boolean> {
+    try {
+      const response = await fetch(`${PRINT_SERVER_URL}/print-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+      });
+      if (!response.ok) {
+        throw new Error("Erro no servidor de impressão.");
+      }
+      return true;
+    } catch (error) {
+      console.warn("⚠️ Servidor de impressão não encontrado. Simulando relatório.");
       return false;
     }
   }

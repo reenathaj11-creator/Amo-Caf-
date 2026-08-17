@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useCashRegister } from "@/contexts/CashRegisterContext"
 import { Lock, Unlock, ArrowDownToLine, ArrowUpFromLine } from "lucide-react"
+import { printerService } from "@/services/printerService"
 
 interface CashRegisterModalProps {
   isOpen: boolean;
@@ -13,7 +14,7 @@ interface CashRegisterModalProps {
 type Tab = 'MENU' | 'ABERTURA' | 'FECHAMENTO' | 'SANGRIA' | 'SUPRIMENTO';
 
 export function CashRegisterModal({ isOpen, onClose }: CashRegisterModalProps) {
-  const { isOpen: isRegisterOpen, currentBalance, openRegister, closeRegister, addOperation } = useCashRegister();
+  const { isOpen: isRegisterOpen, currentBalance, openRegister, closeRegister, addOperation, operations } = useCashRegister();
   const [activeTab, setActiveTab] = useState<Tab>('MENU');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -25,14 +26,68 @@ export function CashRegisterModal({ isOpen, onClose }: CashRegisterModalProps) {
     setDescription('');
   }
 
-  const handleAction = () => {
+  const handleAction = async () => {
     const numericAmount = parseFloat(amount.replace(',', '.'));
     if (isNaN(numericAmount) || numericAmount < 0) return;
 
-    if (activeTab === 'ABERTURA') openRegister(numericAmount);
-    else if (activeTab === 'FECHAMENTO') closeRegister(numericAmount);
-    else if (activeTab === 'SANGRIA') addOperation('SANGRIA', numericAmount, description);
-    else if (activeTab === 'SUPRIMENTO') addOperation('SUPRIMENTO', numericAmount, description);
+    if (activeTab === 'ABERTURA') {
+      openRegister(numericAmount);
+    } else if (activeTab === 'FECHAMENTO') {
+      let startIndex = -1;
+      for (let i = operations.length - 1; i >= 0; i--) {
+         if (operations[i].type === 'ABERTURA') {
+            startIndex = i;
+            break;
+         }
+      }
+      
+      const currentShiftOps = startIndex >= 0 ? operations.slice(startIndex) : operations;
+      
+      let dinheiro = 0;
+      let pix = 0;
+      let cartoes = 0;
+      let naConta = 0;
+      let abertura = 0;
+      let suprimentos = 0;
+      let sangrias = 0;
+
+      currentShiftOps.forEach(op => {
+         if (op.type === 'ABERTURA') abertura += op.amount;
+         else if (op.type === 'SUPRIMENTO') suprimentos += op.amount;
+         else if (op.type === 'SANGRIA') sangrias += op.amount;
+         else if (op.type === 'VENDA') {
+            if (op.description === 'Venda em Dinheiro') {
+               dinheiro += op.amount;
+            } else if (op.description?.includes('Venda em PIX')) {
+               const match = op.description.match(/R\$ ([\d.]+)/);
+               if (match) pix += parseFloat(match[1]);
+            } else if (op.description?.includes('Venda em Cartão')) {
+               const match = op.description.match(/R\$ ([\d.]+)/);
+               if (match) cartoes += parseFloat(match[1]);
+            } else if (op.description?.includes('Venda em Na Conta')) {
+               const match = op.description.match(/R\$ ([\d.]+)/);
+               if (match) naConta += parseFloat(match[1]);
+            }
+         }
+      });
+
+      const totalVendas = dinheiro + pix + cartoes + naConta;
+      const saldoEsperado = abertura + dinheiro + suprimentos - sangrias;
+
+      await printerService.printClosingReport({
+         cashierName: localStorage.getItem('@amocafe:user') || 'Caixa',
+         dinheiro, pix, cartoes, naConta, totalVendas,
+         abertura, suprimentos, sangrias,
+         saldoEsperado, 
+         saldoInformado: numericAmount
+      });
+
+      closeRegister(numericAmount);
+    } else if (activeTab === 'SANGRIA') {
+      addOperation('SANGRIA', numericAmount, description);
+    } else if (activeTab === 'SUPRIMENTO') {
+      addOperation('SUPRIMENTO', numericAmount, description);
+    }
 
     setAmount('');
     setDescription('');
