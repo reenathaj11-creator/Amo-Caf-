@@ -5,7 +5,7 @@ import { CartSidebar } from "./components/CartSidebar"
 import { CheckoutModal } from "./components/CheckoutModal"
 import { usePOS } from "@/contexts/POSContext"
 import { useKeyPress } from "@/hooks/useKeyPress"
-import { Trash2, Tag, MessageSquare, ShoppingBag } from "lucide-react"
+import { ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export function POSDashboard() {

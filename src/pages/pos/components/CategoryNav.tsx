@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { LayoutGrid, Coffee, CupSoda, Sandwich, CakeSlice, Gift, Tag } from "lucide-react"
+import { Coffee, CupSoda, Sandwich, CakeSlice, Gift, Tag } from "lucide-react"
 import { usePOS } from "@/contexts/POSContext"
 
 interface CategoryNavProps {
