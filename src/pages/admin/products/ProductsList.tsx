@@ -28,7 +28,8 @@ export function ProductsList() {
         .from('products')
         .select(`
           *,
-          categories ( name )
+          categories ( name ),
+          subcategories ( name )
         `)
         .order('name', { ascending: true });
 
@@ -104,7 +105,7 @@ export function ProductsList() {
           <TableHeader>
             <TableRow className="bg-slate-50">
               <TableHead>Nome</TableHead>
-              <TableHead>Categoria</TableHead>
+              <TableHead>Categoria / Pasta</TableHead>
               <TableHead>Preço</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -127,7 +128,16 @@ export function ProductsList() {
               filteredProducts.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.categories?.name || '-'}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span>{product.categories?.name || '-'}</span>
+                      {product.subcategories?.name && (
+                        <span className="text-xs text-slate-500 flex items-center">
+                          ↳ {product.subcategories.name}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="font-semibold text-coffee-700">R$ {Number(product.price).toFixed(2).replace('.', ',')}</TableCell>
                   <TableCell>
                     {product.active ? (

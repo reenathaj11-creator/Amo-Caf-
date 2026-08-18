@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react"
 interface Product {
   id: string;
   category_id: string | null;
+  subcategory_id?: string | null;
   name: string;
   description: string | null;
   price: number;
@@ -27,11 +28,13 @@ interface ProductModalProps {
 
 export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: ProductModalProps) {
   const [categories, setCategories] = useState<any[]>([]);
+  const [subcategories, setSubcategories] = useState<any[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [subcategoryId, setSubcategoryId] = useState<string>("none");
   const [active, setActive] = useState(true);
   const [isComboCustom, setIsComboCustom] = useState(false);
   const [isComboItem, setIsComboItem] = useState(false);
@@ -39,13 +42,14 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
 
   useEffect(() => {
     if (isOpen) {
-      fetchCategories();
+      fetchCategoriesAndSubcategories();
       if (productToEdit) {
         setName(productToEdit.name);
         setDescription(productToEdit.description?.replace('[COMBO_CUSTOM]', '').replace('[COMBO_ITEM]', '').trim() || "");
         setPrice(productToEdit.price.toString());
         setImageUrl(productToEdit.image_url || "");
         setCategoryId(productToEdit.category_id || "");
+        setSubcategoryId(productToEdit.subcategory_id || "none");
         setActive(productToEdit.active);
         setIsComboCustom(productToEdit.description?.includes('[COMBO_CUSTOM]') || false);
         setIsComboItem(productToEdit.description?.includes('[COMBO_ITEM]') || false);
@@ -55,6 +59,7 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
         setPrice("");
         setImageUrl("");
         setCategoryId("");
+        setSubcategoryId("none");
         setActive(true);
         setIsComboCustom(false);
         setIsComboItem(false);
@@ -62,13 +67,30 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
     }
   }, [isOpen, productToEdit]);
 
-  const fetchCategories = async () => {
+  // When category changes, reset subcategory if it doesn't belong to new category
+  useEffect(() => {
+    if (subcategoryId !== "none") {
+      const sub = subcategories.find(s => s.id === subcategoryId);
+      if (sub && sub.category_id !== categoryId) {
+        setSubcategoryId("none");
+      }
+    }
+  }, [categoryId, subcategories, subcategoryId]);
+
+  const fetchCategoriesAndSubcategories = async () => {
     try {
-      const { data, error } = await supabase.from('categories').select('id, name').order('sort_order');
-      if (error) throw error;
-      setCategories(data || []);
+      const [catsRes, subsRes] = await Promise.all([
+        supabase.from('categories').select('id, name').order('sort_order'),
+        supabase.from('subcategories').select('id, name, category_id').order('name')
+      ]);
+      
+      if (catsRes.error) throw catsRes.error;
+      if (subsRes.error) throw subsRes.error;
+      
+      setCategories(catsRes.data || []);
+      setSubcategories(subsRes.data || []);
     } catch (error) {
-      console.error("Erro ao buscar categorias:", error);
+      console.error("Erro ao buscar dados:", error);
     }
   };
 
@@ -91,6 +113,7 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
         price: parseFloat(price.replace(',', '.')),
         image_url: imageUrl || null,
         category_id: categoryId,
+        subcategory_id: subcategoryId === "none" ? null : subcategoryId,
         active
       };
 
@@ -116,6 +139,8 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
       setLoading(false);
     }
   };
+
+  const filteredSubcategories = subcategories.filter(sub => sub.category_id === categoryId);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -150,6 +175,23 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
               </Select>
             </div>
           </div>
+
+          {categoryId && filteredSubcategories.length > 0 && (
+            <div className="grid gap-2">
+              <Label htmlFor="subcategory">Subcategoria / Pasta (Opcional)</Label>
+              <Select value={subcategoryId} onValueChange={setSubcategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sem subcategoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhuma (Solto na categoria)</SelectItem>
+                  {filteredSubcategories.map((sub) => (
+                    <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="grid gap-2">
             <Label htmlFor="description">Descrição</Label>

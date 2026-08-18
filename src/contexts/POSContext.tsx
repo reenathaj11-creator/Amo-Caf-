@@ -15,6 +15,8 @@ export type Product = {
   image: string;
   category_id: string;
   description: string | null;
+  subcategory_id?: string | null;
+  subcategory?: string | null;
 };
 
 export type CartItem = {
@@ -65,12 +67,13 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
         if (catError) throw catError;
         setCategories(catData || []);
 
-        // Fetch Products with category names
+        // Fetch Products with category and subcategory names
         const { data: prodData, error: prodError } = await supabase
           .from('products')
           .select(`
-            id, name, price, image_url, category_id, description,
-            categories ( name )
+            id, name, price, image_url, category_id, description, subcategory_id,
+            categories ( name ),
+            subcategories ( name )
           `)
           .eq('active', true)
           .order('name', { ascending: true });
@@ -84,7 +87,9 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
           image: p.image_url || 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=400&q=80',
           category: p.categories?.name || 'Sem Categoria',
           category_id: p.category_id,
-          description: p.description
+          description: p.description,
+          subcategory_id: p.subcategory_id || null,
+          subcategory: p.subcategories?.name || null
         }));
 
         setProducts(mappedProducts);

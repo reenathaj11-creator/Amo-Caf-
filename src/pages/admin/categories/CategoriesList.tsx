@@ -9,15 +9,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Search, Plus, Edit, Trash2, Loader2 } from "lucide-react"
+import { Search, Plus, Edit, Trash2, Loader2, Folder } from "lucide-react"
 import { supabase } from "@/services/supabase/client"
 import { CategoryModal } from "./CategoryModal"
+import { SubcategoriesListModal } from "./SubcategoriesListModal"
 
 export function CategoriesList() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<any>(null);
+  
+  const [isSubModalOpen, setIsSubModalOpen] = useState(false);
+  const [categoryForSubcategories, setCategoryForSubcategories] = useState<any>(null);
 
   const fetchCategories = async () => {
     try {
@@ -67,12 +71,17 @@ export function CategoriesList() {
     setIsModalOpen(true);
   };
 
+  const openSubcategoriesModal = (category: any) => {
+    setCategoryForSubcategories(category);
+    setIsSubModalOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Categorias</h2>
-          <p className="text-slate-500">Gerencie as categorias do catálogo.</p>
+          <p className="text-slate-500">Gerencie as categorias e pastas (subcategorias) do catálogo.</p>
         </div>
         <Button onClick={openNewModal} className="bg-slate-900 text-white gap-2">
           <Plus className="w-4 h-4" />
@@ -123,7 +132,16 @@ export function CategoriesList() {
                   <TableCell>{category.sort_order}</TableCell>
                   <TableCell>{category.products?.[0]?.count || 0}</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button 
+                        onClick={() => openSubcategoriesModal(category)} 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-brand-600 hover:bg-brand-50"
+                        title="Gerenciar Pastas/Subcategorias"
+                      >
+                        <Folder className="h-4 w-4" />
+                      </Button>
                       <Button onClick={() => openEditModal(category)} variant="ghost" size="icon" className="h-8 w-8 text-blue-600">
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -144,6 +162,12 @@ export function CategoriesList() {
         onClose={() => setIsModalOpen(false)}
         onSaved={fetchCategories}
         categoryToEdit={categoryToEdit}
+      />
+      
+      <SubcategoriesListModal 
+        isOpen={isSubModalOpen}
+        onClose={() => setIsSubModalOpen(false)}
+        category={categoryForSubcategories}
       />
     </div>
   )
