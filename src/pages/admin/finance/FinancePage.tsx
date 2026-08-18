@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, ArrowLeft, Printer, BarChart3 } from 'lucide-react';
 import { TransactionModal } from './components/TransactionModal';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export function FinancePage() {
   const [loading, setLoading] = useState(true);
@@ -233,40 +233,31 @@ export function FinancePage() {
             </div>
           </div>
 
-          {/* GRÁFICO DE FATURAMENTO DIÁRIO */}
+          {/* TABELA DE FATURAMENTO DIÁRIO */}
           {selectedMonth && dailyRevenue.length > 0 && (
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-coffee-100 mb-8 print:break-inside-avoid">
-              <div className="flex items-center gap-2 mb-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-coffee-100 overflow-hidden mb-8">
+              <div className="p-6 border-b border-coffee-100 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-brand-600" />
                 <h3 className="text-lg font-bold text-coffee-950">Faturamento Diário do PDV</h3>
               </div>
-              <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dailyRevenue} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: '#64748b', fontSize: 12 }} 
-                      dy={10}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: '#64748b', fontSize: 12 }}
-                      tickFormatter={(value) => `R$ ${value}`}
-                    />
-                    <Tooltip 
-                      cursor={{ fill: '#f8fafc' }}
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      formatter={(value: any) => [`R$ ${Number(value).toFixed(2).replace('.', ',')}`, 'Faturamento']}
-                      labelStyle={{ color: '#0f172a', fontWeight: 'bold', marginBottom: '4px' }}
-                    />
-                    <Bar dataKey="total" fill="#D97706" radius={[4, 4, 0, 0]} barSize={40} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <Table>
+                <TableHeader className="bg-coffee-50">
+                  <TableRow>
+                    <TableHead className="font-bold text-coffee-900 w-[150px]">Data</TableHead>
+                    <TableHead className="font-bold text-coffee-900 text-right">Valor Faturado (R$)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {dailyRevenue.map((dia, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell className="font-medium text-coffee-900">{dia.name}</TableCell>
+                      <TableCell className="text-right font-bold text-emerald-600">
+                        {Number(dia.total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
 
