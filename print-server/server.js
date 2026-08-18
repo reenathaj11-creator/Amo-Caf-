@@ -47,7 +47,10 @@ app.post('/print', async (req, res) => {
     const data = req.body;
     let printer = getPrinter();
 
-    const senha = data.orderId.toUpperCase().substring(0, 5);
+    // Extrair apenas os números do orderId e pegar os primeiros 4 dígitos
+    let numbersOnly = data.orderId.replace(/\D/g, '');
+    if (numbersOnly.length < 4) numbersOnly = (numbersOnly + "0000");
+    const senha = numbersOnly.substring(0, 4);
 
     // ==========================================
     // VIA DO BALCÃO
@@ -72,14 +75,19 @@ app.post('/print', async (req, res) => {
     printer.println("ITENS PARA PREPARO:");
     
     data.items.forEach(item => {
+      printer.setTextSize(1, 1); // Texto maior
+      printer.bold(true); // Negrito
       printer.println(`${item.quantity}x ${item.name}`);
+      
+      printer.setTextNormal(); // Volta ao tamanho normal para os modificadores
+      printer.bold(false);
+      
       if (item.modifiers && item.modifiers.length > 0) {
         item.modifiers.forEach(mod => {
           printer.println(`   + ${mod}`);
         });
       }
     });
-    printer.bold(false);
     
     printer.drawLine();
     printer.println("");
