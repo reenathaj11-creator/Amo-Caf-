@@ -36,36 +36,61 @@ export function FinancePage() {
         endDay = lastDayObj.toISOString().split('T')[0];
       }
 
-      // 1. Buscar todas as vendas (Receita de PDV)
-      let salesQuery = supabase.from('sales').select('total_amount');
+      // 1. Buscar Totais de Vendas (Receita de PDV) usando RPC super rápido
       if (selectedMonth) {
-        salesQuery = salesQuery.gte('created_at', startDateStr).lt('created_at', endDateStr);
+        const { data: totalSales, error: salesError } = await supabase.rpc('get_sales_total', {
+          p_start_date: startDateStr,
+          p_end_date: endDateStr
+        });
+        if (salesError) throw salesError;
+        setPosRevenue(totalSales || 0);
+      } else {
+        // Sem filtro, pode usar aggregation simples do JS ou outra query se necessário, 
+        // mas para manter a compatibilidade, vamos chamar sem argumentos se for o caso, 
+        // ou puxar tudo. Neste app, o "Ver Tudo" no financeiro pode exigir uma query geral.
+        // O ideal é a RPC suportar NULL. Como criamos sem, vamos manter o fetch manual só pro fallback.
+        const { data: salesData } = await supabase.from('sales').select('total_amount');
+        setPosRevenue(salesData?.reduce((acc, curr) => acc + (curr.total_amount || 0), 0) || 0);
       }
-      
-      const { data: salesData, error: salesError } = await salesQuery;
-      
-      if (salesError) throw salesError;
-      const pdvTotal = salesData?.reduce((acc, curr) => acc + (curr.total_amount || 0), 0) || 0;
-      setPosRevenue(pdvTotal);
 
-      // 2. Buscar todas as transações manuais (Receitas e Despesas do Livro Caixa)
+      // 2. Buscar Totais do Livro Caixa Manual usando RPC
+      if (selectedMonth) {
+        const { data: txTotals, error: txTotalError } = await supabase.rpc('get_transactions_totals', {
+          p_start_date: startDay,
+          p_end_date: endDay
+        });
+        
+        if (txTotalError) {
+          console.error("Erro na RPC de transações", txTotalError);
+        } else if (txTotals && txTotals.length > 0) {
+          setManualRevenue(txTotals[0].manual_income || 0);
+          setTotalExpenses(txTotals[0].manual_expense || 0);
+        }
+      }
+
+      // 3. Buscar os registros detalhados das transações para exibir na tabela da tela
+      // Aqui usamos limits se for "Ver Tudo" para não travar
       let txQuery = supabase.from('transactions').select('*').order('date', { ascending: false });
       if (selectedMonth) {
         txQuery = txQuery.gte('date', startDay).lte('date', endDay);
+      } else {
+        txQuery = txQuery.limit(100); // Prevenção de gargalo ao "Ver Tudo"
       }
       
       const { data: txData, error: txError } = await txQuery;
 
       if (txError) {
-        console.error('Tabela transactions pode não existir:', txError.message);
+        console.error('Tabela transactions com erro:', txError.message);
       } else {
         setTransactions(txData || []);
         
-        const manualIncomes = txData?.filter(t => t.type === 'income').reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
-        const manualExpenses = txData?.filter(t => t.type === 'expense').reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
-        
-        setManualRevenue(manualIncomes);
-        setTotalExpenses(manualExpenses);
+        // Se for "Ver Tudo", precisamos calcular os totais manualmente pois a RPC exige datas
+        if (!selectedMonth) {
+          const manualIncomes = txData?.filter(t => t.type === 'income').reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
+          const manualExpenses = txData?.filter(t => t.type === 'expense').reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
+          setManualRevenue(manualIncomes);
+          setTotalExpenses(manualExpenses);
+        }
       }
 
     } catch (error) {
