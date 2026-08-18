@@ -39,7 +39,7 @@ class PrinterService {
         throw new Error("Servidor de impressão retornou erro.");
       }
       return true;
-    } catch (error) {
+    } catch {
       console.warn("⚠️ Servidor de impressão não encontrado. Mostrando cupom no console para simulação:");
       this.simulateConsolePrint(params);
       return false; // Retorna false para indicar que não imprimiu na vida real, mas a venda não trava
@@ -55,7 +55,7 @@ class PrinterService {
         throw new Error("Erro ao abrir gaveta via servidor.");
       }
       return true;
-    } catch (error) {
+    } catch {
       console.warn("⚠️ Servidor não encontrado. Simulando abertura de gaveta.");
       return false;
     }
@@ -72,7 +72,7 @@ class PrinterService {
         throw new Error("Erro no servidor de impressão.");
       }
       return true;
-    } catch (error) {
+    } catch {
       console.warn("⚠️ Servidor de impressão não encontrado. Simulando relatório.");
       return false;
     }

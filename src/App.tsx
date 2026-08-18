@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { POSLayout } from './pages/pos/POSLayout';
-import { AdminLayout } from './pages/admin/AdminLayout';
 import { Login } from './pages/auth/Login';
 import { syncService } from '@/services/syncService';
 import { supabase } from '@/services/supabase/client';
 import { CashRegisterProvider } from '@/contexts/CashRegisterContext';
+import { Loader2 } from 'lucide-react';
+
+// Lazy loading das rotas pesadas
+const POSLayout = lazy(() => import('./pages/pos/POSLayout').then(m => ({ default: m.POSLayout })));
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout').then(m => ({ default: m.AdminLayout })));
 
 // Inicia o sincronizador background
 syncService.startAutoSync();
@@ -46,6 +49,12 @@ const PrivateAdminRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const LoadingScreen = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <Loader2 className="w-10 h-10 animate-spin text-brand-500" />
+  </div>
+);
+
 function App() {
   return (
     <CashRegisterProvider>
@@ -56,14 +65,18 @@ function App() {
           {/* Rotas Protegidas */}
           <Route path="/pos/*" element={
             <ProtectedRoute>
-              <POSLayout />
+              <Suspense fallback={<LoadingScreen />}>
+                <POSLayout />
+              </Suspense>
             </ProtectedRoute>
           } />
           
           <Route path="/admin/*" element={
             <ProtectedRoute>
               <PrivateAdminRoute>
-                <AdminLayout />
+                <Suspense fallback={<LoadingScreen />}>
+                  <AdminLayout />
+                </Suspense>
               </PrivateAdminRoute>
             </ProtectedRoute>
           } />

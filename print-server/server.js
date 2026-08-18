@@ -32,7 +32,7 @@ function printBuffer(buffer) {
     fs.writeFileSync(tempFile, buffer);
     
     // Comando nativo do Windows para enviar um arquivo binário para a impressora compartilhada
-    exec('copy /B receipt_temp.bin \\\\localhost\\BEMATECH', (error, stdout, stderr) => {
+    exec(`copy /B receipt_temp.bin \\\\localhost\\${PRINTER_INTERFACE}`, (error) => {
       if (error) {
         console.error("Erro no comando COPY:", error);
         return reject(error);
