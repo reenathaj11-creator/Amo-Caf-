@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+import { supabase } from '@/services/supabase/client';
+
 export type CashOperationType = 'ABERTURA' | 'FECHAMENTO' | 'SANGRIA' | 'SUPRIMENTO' | 'VENDA';
 
 export interface CashOperation {
@@ -48,7 +50,7 @@ export function CashRegisterProvider({ children }: { children: React.ReactNode }
     localStorage.setItem('@amocafe:cashRegister_operations', JSON.stringify(operations));
   }, [isOpen, currentBalance, operations]);
 
-  const addOperation = (type: CashOperationType, amount: number, description?: string) => {
+  const addOperation = async (type: CashOperationType, amount: number, description?: string) => {
     const user_email = localStorage.getItem('@amocafe:user') || 'Usuário Local';
     const operation: CashOperation = {
       id: crypto.randomUUID(),
@@ -65,6 +67,19 @@ export function CashRegisterProvider({ children }: { children: React.ReactNode }
       setCurrentBalance((prev: number) => prev - amount);
     } else {
       setCurrentBalance((prev: number) => prev + amount);
+    }
+
+    try {
+      await supabase.from('cash_register_operations').insert([{
+        id: operation.id,
+        type: operation.type,
+        amount: operation.amount,
+        description: operation.description,
+        user_email: operation.user_email,
+        created_at: operation.timestamp.toISOString()
+      }]);
+    } catch (e) {
+      console.error("Erro ao salvar operação no Supabase:", e);
     }
   };
 

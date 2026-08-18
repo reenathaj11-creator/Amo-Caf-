@@ -7,35 +7,47 @@ import { Loader2 } from "lucide-react";
 
 export function SalesList() {
   const [orders, setOrders] = useState<any[]>([]);
+  const [cashOperations, setCashOperations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchSales() {
+    async function fetchHistory() {
       try {
         setLoading(true);
-        // Busca as vendas ordenadas da mais recente para a mais antiga e faz join para contar os itens
-        const { data: sales, error } = await supabase
+        // Busca as vendas
+        const { data: sales, error: salesError } = await supabase
           .from('sales')
           .select(`
-            id,
-            created_at,
-            payment_method,
-            total_amount,
-            status,
+            id, created_at, payment_method, total_amount, status,
             sale_items ( quantity )
           `)
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (salesError) throw salesError;
         setOrders(sales || []);
+
+        // Busca o histórico do caixa (se a tabela não existir ainda, vai dar erro e cair no catch)
+        const { data: cashData, error: cashError } = await supabase
+          .from('cash_register_operations')
+          .select('*')
+          .in('type', ['ABERTURA', 'FECHAMENTO'])
+          .order('created_at', { ascending: false });
+
+        if (cashError) {
+          console.log('Tabela cash_register_operations pode não existir ainda:', cashError.message);
+          setCashOperations([]);
+        } else {
+          setCashOperations(cashData || []);
+        }
+
       } catch (err) {
-        console.error("Erro ao buscar histórico de vendas:", err);
+        console.error("Erro ao buscar histórico:", err);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchSales();
+    fetchHistory();
   }, []);
 
   return (
@@ -133,31 +145,24 @@ export function SalesList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(() => {
-                const savedOps = localStorage.getItem('@amocafe:cashRegister_operations');
-                let ops = [];
-                if (savedOps) {
-                  try {
-                    ops = JSON.parse(savedOps).filter((op: any) => op.type === 'ABERTURA' || op.type === 'FECHAMENTO');
-                    // Ordenar do mais recente para o mais antigo
-                    ops.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-                  } catch (e) {}
-                }
-
-                if (!ops.length) {
-                  return (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-6 text-slate-500">
-                        Nenhum evento de caixa registrado ainda.
-                      </TableCell>
-                    </TableRow>
-                  );
-                }
-
-                return ops.map((op: any) => (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-10">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-brand-500 mb-2" />
+                    <span className="text-coffee-500">Buscando histórico na nuvem...</span>
+                  </TableCell>
+                </TableRow>
+              ) : !cashOperations.length ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-6 text-slate-500">
+                    Nenhum evento de caixa registrado ainda.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                cashOperations.map((op: any) => (
                   <TableRow key={op.id} className="border-b border-coffee-100 hover:bg-cream-50 transition-colors">
                     <TableCell className="font-medium text-coffee-900">
-                      {new Date(op.timestamp).toLocaleString()}
+                      {new Date(op.created_at).toLocaleString('pt-BR')}
                     </TableCell>
                     <TableCell className="text-coffee-700 font-medium">
                       {op.user_email?.split('@')[0] || 'Usuário Local'}
@@ -177,8 +182,8 @@ export function SalesList() {
                       R$ {Number(op.amount).toFixed(2).replace('.', ',')}
                     </TableCell>
                   </TableRow>
-                ));
-              })()}
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
