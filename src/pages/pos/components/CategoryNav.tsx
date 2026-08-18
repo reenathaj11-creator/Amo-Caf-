@@ -44,7 +44,7 @@ export function CategoryNav({ activeCategory, onSelect }: CategoryNavProps) {
 
   return (
     <div className="w-full mt-2 relative">
-      <div className="flex w-full gap-2 lg:gap-3 overflow-x-auto no-scrollbar pb-3">
+      <div className="flex w-full gap-2 lg:gap-3 overflow-x-auto overflow-y-hidden pb-4 pt-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {categories.map((category) => {
           const Icon = getIconComponent(category.icon);
           const isActive = activeCategory === category.name;
