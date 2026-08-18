@@ -47,23 +47,27 @@ export function FinancePage() {
         if (salesError) throw salesError;
         setPosRevenue(totalSales || 0);
 
-        // Buscar Faturamento Diário para o Gráfico
-        const { data: dailyData, error: dailyError } = await supabase.rpc('get_daily_revenue', {
+        // Buscar Consolidação Diária (PDV + Transações) para a Tabela
+        const { data: dailyData, error: dailyError } = await supabase.rpc('get_daily_consolidation', {
           p_start_date: startDateStr,
           p_end_date: endDateStr
         });
         
         if (!dailyError && dailyData) {
-          // Formatar data para o gráfico ('YYYY-MM-DD' para 'DD/MM')
+          // Formatar data para a tabela ('YYYY-MM-DD' para 'DD/MM')
           const formattedDaily = dailyData.map((d: any) => {
             const [, m, day] = d.day.split('-');
             return {
               name: `${day}/${m}`,
-              total: Number(d.total_revenue)
+              pdv_revenue: Number(d.pdv_revenue),
+              manual_income: Number(d.manual_income),
+              manual_expense: Number(d.manual_expense),
+              net_total: Number(d.net_total)
             };
           });
           setDailyRevenue(formattedDaily);
         } else {
+          console.error("Erro daily:", dailyError);
           setDailyRevenue([]);
         }
 
@@ -233,26 +237,38 @@ export function FinancePage() {
             </div>
           </div>
 
-          {/* TABELA DE FATURAMENTO DIÁRIO */}
+          {/* TABELA DE FATURAMENTO DIÁRIO COMPLETA */}
           {selectedMonth && dailyRevenue.length > 0 && (
             <div className="bg-white rounded-2xl shadow-sm border border-coffee-100 overflow-hidden mb-8">
               <div className="p-6 border-b border-coffee-100 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-brand-600" />
-                <h3 className="text-lg font-bold text-coffee-950">Faturamento Diário do PDV</h3>
+                <h3 className="text-lg font-bold text-coffee-950">Fechamento Diário Consolidado</h3>
               </div>
               <Table>
                 <TableHeader className="bg-coffee-50">
                   <TableRow>
-                    <TableHead className="font-bold text-coffee-900 w-[150px]">Data</TableHead>
-                    <TableHead className="font-bold text-coffee-900 text-right">Valor Faturado (R$)</TableHead>
+                    <TableHead className="font-bold text-coffee-900 w-[100px]">Data</TableHead>
+                    <TableHead className="font-bold text-coffee-900 text-right">Vendas (PDV)</TableHead>
+                    <TableHead className="font-bold text-coffee-900 text-right">Outras Entradas</TableHead>
+                    <TableHead className="font-bold text-coffee-900 text-right">Despesas/Saídas</TableHead>
+                    <TableHead className="font-bold text-coffee-900 text-right">Lucro Líquido</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {dailyRevenue.map((dia, idx) => (
                     <TableRow key={idx}>
                       <TableCell className="font-medium text-coffee-900">{dia.name}</TableCell>
-                      <TableCell className="text-right font-bold text-emerald-600">
-                        {Number(dia.total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      <TableCell className="text-right text-coffee-700">
+                        {dia.pdv_revenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </TableCell>
+                      <TableCell className="text-right text-emerald-600">
+                        {dia.manual_income > 0 ? dia.manual_income.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
+                      </TableCell>
+                      <TableCell className="text-right text-red-600">
+                        {dia.manual_expense > 0 ? dia.manual_expense.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
+                      </TableCell>
+                      <TableCell className={`text-right font-bold ${dia.net_total >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+                        {dia.net_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                       </TableCell>
                     </TableRow>
                   ))}
