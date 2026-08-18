@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Coffee, CupSoda, Sandwich, CakeSlice, Gift, Tag } from "lucide-react"
 import { usePOS } from "@/contexts/POSContext"
 
@@ -20,7 +19,7 @@ const getIconComponent = (iconName: string | undefined) => {
   }
 }
 
-const getCategoryStyle = (name: string, isActive: boolean) => {
+const getCategoryStyle = (name: string) => {
   const n = name.toLowerCase();
   let baseColor = 'bg-brand-500';
   
@@ -49,7 +48,7 @@ export function CategoryNav({ activeCategory, onSelect }: CategoryNavProps) {
         {categories.map((category) => {
           const Icon = getIconComponent(category.icon);
           const isActive = activeCategory === category.name;
-          const { baseColor } = getCategoryStyle(category.name, isActive);
+          const { baseColor } = getCategoryStyle(category.name);
           
           return (
             <button
