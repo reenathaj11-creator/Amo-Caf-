@@ -21,6 +21,7 @@ function getPrinter() {
     characterSet: 'PC860_PORTUGUESE', // Necessário para a biblioteca não dar erro de undefined
     removeSpecialCharacters: false,
     lineCharacter: "-",
+    width: 32, // Força a largura para 32 caracteres (evita quebra de linha em bobina de 58mm)
   });
 }
 
