@@ -74,6 +74,15 @@ export function CartSidebar({ onCheckout, isOpen, onClose }: CartSidebarProps) {
                 <div className="flex justify-between items-start">
                   <span className="font-bold text-sm text-coffee-950 leading-tight pr-4">
                     {item.product.name}
+                    {item.modifiers && item.modifiers.length > 0 && (
+                      <div className="flex flex-col mt-1 space-y-0.5">
+                        {item.modifiers.map((mod: string, i: number) => (
+                          <span key={i} className="text-xs text-brand-600 font-medium">
+                            + {mod}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </span>
                   <span className="font-bold text-sm text-coffee-900 whitespace-nowrap">
                     R$ {item.subtotal.toFixed(2).replace('.', ',')}

@@ -73,6 +73,11 @@ app.post('/print', async (req, res) => {
     
     data.items.forEach(item => {
       printer.println(`${item.quantity}x ${item.name}`);
+      if (item.modifiers && item.modifiers.length > 0) {
+        item.modifiers.forEach(mod => {
+          printer.println(`   + ${mod}`);
+        });
+      }
     });
     printer.bold(false);
     
@@ -118,6 +123,11 @@ app.post('/print', async (req, res) => {
         { text: item.name.substring(0, 20), align: "LEFT", width: 0.6 },
         { text: `R$ ${item.subtotal.toFixed(2)}`, align: "RIGHT", width: 0.25 }
       ]);
+      if (item.modifiers && item.modifiers.length > 0) {
+        item.modifiers.forEach(mod => {
+          printer.println(`   + ${mod}`);
+        });
+      }
     });
     
     printer.drawLine();

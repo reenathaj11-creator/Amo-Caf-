@@ -33,6 +33,8 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
   const [imageUrl, setImageUrl] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [active, setActive] = useState(true);
+  const [isComboCustom, setIsComboCustom] = useState(false);
+  const [isComboItem, setIsComboItem] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -40,11 +42,13 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
       fetchCategories();
       if (productToEdit) {
         setName(productToEdit.name);
-        setDescription(productToEdit.description || "");
+        setDescription(productToEdit.description?.replace('[COMBO_CUSTOM]', '').replace('[COMBO_ITEM]', '').trim() || "");
         setPrice(productToEdit.price.toString());
         setImageUrl(productToEdit.image_url || "");
         setCategoryId(productToEdit.category_id || "");
         setActive(productToEdit.active);
+        setIsComboCustom(productToEdit.description?.includes('[COMBO_CUSTOM]') || false);
+        setIsComboItem(productToEdit.description?.includes('[COMBO_ITEM]') || false);
       } else {
         setName("");
         setDescription("");
@@ -52,6 +56,8 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
         setImageUrl("");
         setCategoryId("");
         setActive(true);
+        setIsComboCustom(false);
+        setIsComboItem(false);
       }
     }
   }, [isOpen, productToEdit]);
@@ -71,9 +77,17 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
 
     setLoading(true);
     try {
+      let finalDescription = description.trim();
+      if (isComboCustom) {
+        finalDescription += (finalDescription ? ' ' : '') + '[COMBO_CUSTOM]';
+      }
+      if (isComboItem) {
+        finalDescription += (finalDescription ? ' ' : '') + '[COMBO_ITEM]';
+      }
+
       const payload = {
         name,
-        description: description || null,
+        description: finalDescription || null,
         price: parseFloat(price.replace(',', '.')),
         image_url: imageUrl || null,
         category_id: categoryId,
@@ -142,14 +156,14 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
             <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ex: Café espresso com leite vaporizado..." />
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="image">URL da Imagem</Label>
-            <Input id="image" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Ex: https://images.unsplash.com/photo-..." />
-            {imageUrl && (
-              <div className="mt-2 h-32 w-full rounded-md overflow-hidden bg-slate-100 border flex items-center justify-center">
-                <img src={imageUrl} alt="Preview" className="h-full w-full object-cover" onError={(e) => e.currentTarget.src = ''} />
-              </div>
-            )}
+          <div className="flex items-center space-x-2 mt-2">
+            <Switch id="isCombo" checked={isComboCustom} onCheckedChange={setIsComboCustom} />
+            <Label htmlFor="isCombo">Abrir seleção de Bebida e Lanche no PDV</Label>
+          </div>
+
+          <div className="flex items-center space-x-2 mt-2">
+            <Switch id="isComboItem" checked={isComboItem} onCheckedChange={setIsComboItem} />
+            <Label htmlFor="isComboItem">Permitir que este produto seja escolhido dentro de um Combo</Label>
           </div>
 
           <div className="flex items-center space-x-2 mt-2">

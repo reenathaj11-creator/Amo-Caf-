@@ -115,7 +115,7 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
 
       const printParams = {
         orderId: orderId.split('-')[0], 
-        items: cart.map(c => ({ name: c.product.name, quantity: c.quantity, subtotal: c.subtotal })),
+        items: cart.map(c => ({ name: c.product.name, quantity: c.quantity, subtotal: c.subtotal, modifiers: c.modifiers })),
         subtotal,
         discount,
         total,

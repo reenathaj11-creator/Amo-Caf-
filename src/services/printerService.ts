@@ -1,6 +1,6 @@
 export interface PrintReceiptParams {
   orderId: string;
-  items: { name: string; quantity: number; subtotal: number }[];
+  items: { name: string; quantity: number; subtotal: number; modifiers?: string[] }[];
   subtotal: number;
   discount: number;
   total: number;
@@ -88,6 +88,9 @@ class PrinterService {
     console.log("-------------------------------------");
     params.items.forEach(item => {
       console.log(`${item.quantity}x ${item.name.padEnd(20)} R$ ${item.subtotal.toFixed(2)}`);
+      if (item.modifiers && item.modifiers.length > 0) {
+        item.modifiers.forEach(mod => console.log(`   + ${mod}`));
+      }
     });
     console.log("-------------------------------------");
     console.log(`Subtotal: R$ ${params.subtotal.toFixed(2)}`);

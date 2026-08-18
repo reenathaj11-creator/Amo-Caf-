@@ -1,9 +1,14 @@
+import { useState } from "react"
 import { usePOS } from "@/contexts/POSContext"
+import type { Product } from "@/contexts/POSContext"
 import { Card } from "@/components/ui/card"
-import { Plus, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
+import { ComboModal } from "./ComboModal"
 
 export function ProductGrid({ activeCategory }: { activeCategory: string }) {
   const { products, loadingCatalog, addToCart } = usePOS();
+  const [comboModalOpen, setComboModalOpen] = useState(false);
+  const [selectedCombo, setSelectedCombo] = useState<Product | null>(null);
 
   if (loadingCatalog) {
     return (
@@ -25,44 +30,51 @@ export function ProductGrid({ activeCategory }: { activeCategory: string }) {
     );
   }
 
+  const handleProductClick = (product: Product) => {
+    if (product.description?.includes('[COMBO_CUSTOM]')) {
+      setSelectedCombo(product);
+      setComboModalOpen(true);
+    } else {
+      addToCart(product);
+    }
+  };
+
+  const handleComboConfirm = (bebida: string, lanche: string) => {
+    if (selectedCombo) {
+      addToCart(selectedCombo, 1, [`Lanche: ${lanche}`, `Bebida: ${bebida}`]);
+    }
+    setComboModalOpen(false);
+  };
+
   return (
+    <>
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 pb-6">
       {filteredProducts.map((product) => (
         <Card 
           key={product.id}
-          className="flex flex-col cursor-pointer transition-all bg-white overflow-hidden group rounded-2xl border-none shadow-sm hover:shadow-md hover:-translate-y-1"
-          onClick={() => addToCart(product)}
+          className="flex flex-col cursor-pointer transition-all bg-white overflow-hidden group rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-brand-500 hover:bg-brand-50"
+          onClick={() => handleProductClick(product)}
         >
-          {/* Topo: Imagem sem margens */}
-          <div className="h-40 w-full overflow-hidden bg-cream-100 relative">
-            <img 
-              src={product.image} 
-              alt={product.name} 
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              onError={(e) => {
-                // Fallback elegante
-                e.currentTarget.src = "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=400&q=80";
-              }}
-            />
-          </div>
-          
-          {/* Base: Infos e Ação */}
-          <div className="p-4 flex flex-col h-[110px] justify-between">
-            <h3 className="font-bold text-sm leading-tight text-coffee-950 line-clamp-2 pr-2">
+          <div className="p-3 flex flex-col items-center justify-center h-[120px] text-center">
+            <h3 className="font-bold text-[13px] leading-tight text-coffee-950 uppercase mb-2 break-words w-full">
               {product.name}
             </h3>
             
-            <div className="flex items-center justify-between mt-auto">
-              <span className="font-bold text-base text-brand-500">
-                R$ {product.price.toFixed(2).replace('.', ',')}
-              </span>
-              <button className="h-8 w-8 rounded-lg bg-brand-50 flex items-center justify-center text-brand-500 transition-colors group-hover:bg-brand-500 group-hover:text-white">
-                <Plus className="w-5 h-5" />
-              </button>
-            </div>
+            <span className="font-bold text-[15px] text-brand-600 mt-auto">
+              R$ {product.price.toFixed(2).replace('.', ',')}
+            </span>
           </div>
         </Card>
       ))}
     </div>
+
+    <ComboModal 
+      isOpen={comboModalOpen}
+      onClose={() => setComboModalOpen(false)}
+      onConfirm={handleComboConfirm}
+      comboProduct={selectedCombo}
+      allProducts={products}
+    />
+    </>
   )
 }

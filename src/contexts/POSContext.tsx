@@ -14,6 +14,7 @@ export type Product = {
   category: string; // name of the category
   image: string;
   category_id: string;
+  description: string | null;
 };
 
 export type CartItem = {
@@ -26,7 +27,7 @@ export type CartItem = {
 
 interface POSContextType {
   cart: CartItem[];
-  addToCart: (product: Product, quantity?: number) => void;
+  addToCart: (product: Product, quantity?: number, modifiers?: string[]) => void;
   removeFromCart: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -68,7 +69,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
         const { data: prodData, error: prodError } = await supabase
           .from('products')
           .select(`
-            id, name, price, image_url, category_id,
+            id, name, price, image_url, category_id, description,
             categories ( name )
           `)
           .eq('active', true)
@@ -82,7 +83,8 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
           price: Number(p.price),
           image: p.image_url || 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=400&q=80',
           category: p.categories?.name || 'Sem Categoria',
-          category_id: p.category_id
+          category_id: p.category_id,
+          description: p.description
         }));
 
         setProducts(mappedProducts);
@@ -96,9 +98,13 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     loadCatalog();
   }, []);
 
-  const addToCart = (product: Product, quantity = 1) => {
+  const addToCart = (product: Product, quantity = 1, modifiers: string[] = []) => {
     setCart((prev) => {
-      const existingItem = prev.find((item) => item.product.id === product.id && item.modifiers.length === 0);
+      // Se tiver modificadores, não agrupa com itens sem modificadores ou com modificadores diferentes
+      const modifiersString = JSON.stringify(modifiers);
+      const existingItem = prev.find(
+        (item) => item.product.id === product.id && JSON.stringify(item.modifiers) === modifiersString
+      );
       
       if (existingItem) {
         return prev.map((item) =>
@@ -112,7 +118,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
         id: crypto.randomUUID(),
         product,
         quantity,
-        modifiers: [],
+        modifiers,
         subtotal: product.price * quantity,
       };
       

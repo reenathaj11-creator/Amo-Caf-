@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Search, Plus, Edit, Trash2, Loader2, Image as ImageIcon } from "lucide-react"
+import { Search, Plus, Edit, Trash2, Loader2 } from "lucide-react"
 import { supabase } from "@/services/supabase/client"
 import { ProductModal } from "./ProductModal"
 
@@ -103,7 +103,6 @@ export function ProductsList() {
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50">
-              <TableHead className="w-[80px]">Imagem</TableHead>
               <TableHead>Nome</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Preço</TableHead>
@@ -127,15 +126,6 @@ export function ProductsList() {
             ) : (
               filteredProducts.map((product) => (
                 <TableRow key={product.id}>
-                  <TableCell>
-                    {product.image_url ? (
-                      <img src={product.image_url} alt={product.name} className="w-12 h-12 rounded-lg object-cover border" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-lg bg-slate-100 border flex items-center justify-center text-slate-400">
-                        <ImageIcon className="w-5 h-5" />
-                      </div>
-                    )}
-                  </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.categories?.name || '-'}</TableCell>
                   <TableCell className="font-semibold text-coffee-700">R$ {Number(product.price).toFixed(2).replace('.', ',')}</TableCell>
