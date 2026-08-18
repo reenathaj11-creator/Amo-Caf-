@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Loader2 } from "lucide-react"
 import { ComboModal } from "./ComboModal"
 
-export function ProductGrid({ activeCategory }: { activeCategory: string }) {
+export function ProductGrid({ activeCategory, searchQuery }: { activeCategory: string, searchQuery?: string }) {
   const { products, loadingCatalog, addToCart } = usePOS();
   const [comboModalOpen, setComboModalOpen] = useState(false);
   const [selectedCombo, setSelectedCombo] = useState<Product | null>(null);
@@ -19,7 +19,9 @@ export function ProductGrid({ activeCategory }: { activeCategory: string }) {
     );
   }
 
-  const filteredProducts = products.filter(p => p.category === activeCategory);
+  const filteredProducts = searchQuery
+    ? products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : products.filter(p => p.category === activeCategory);
 
   if (filteredProducts.length === 0) {
     return (
