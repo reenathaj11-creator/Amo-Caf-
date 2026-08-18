@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/services/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, ArrowLeft, Printer } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, ArrowLeft, Printer, BarChart3 } from 'lucide-react';
 import { TransactionModal } from './components/TransactionModal';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export function FinancePage() {
   const [loading, setLoading] = useState(true);
@@ -11,6 +12,7 @@ export function FinancePage() {
   const [manualRevenue, setManualRevenue] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [dailyRevenue, setDailyRevenue] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const currentMonthString = new Date().toISOString().substring(0, 7);
@@ -44,13 +46,32 @@ export function FinancePage() {
         });
         if (salesError) throw salesError;
         setPosRevenue(totalSales || 0);
+
+        // Buscar Faturamento Diário para o Gráfico
+        const { data: dailyData, error: dailyError } = await supabase.rpc('get_daily_revenue', {
+          p_start_date: startDateStr,
+          p_end_date: endDateStr
+        });
+        
+        if (!dailyError && dailyData) {
+          // Formatar data para o gráfico ('YYYY-MM-DD' para 'DD/MM')
+          const formattedDaily = dailyData.map((d: any) => {
+            const [, m, day] = d.day.split('-');
+            return {
+              name: `${day}/${m}`,
+              total: Number(d.total_revenue)
+            };
+          });
+          setDailyRevenue(formattedDaily);
+        } else {
+          setDailyRevenue([]);
+        }
+
       } else {
-        // Sem filtro, pode usar aggregation simples do JS ou outra query se necessário, 
-        // mas para manter a compatibilidade, vamos chamar sem argumentos se for o caso, 
-        // ou puxar tudo. Neste app, o "Ver Tudo" no financeiro pode exigir uma query geral.
-        // O ideal é a RPC suportar NULL. Como criamos sem, vamos manter o fetch manual só pro fallback.
+        // Sem filtro, pode usar aggregation simples do JS ou outra query se necessário
         const { data: salesData } = await supabase.from('sales').select('total_amount');
         setPosRevenue(salesData?.reduce((acc, curr) => acc + (curr.total_amount || 0), 0) || 0);
+        setDailyRevenue([]); // Grafico diário fica vazio sem filtro de mês
       }
 
       // 2. Buscar Totais do Livro Caixa Manual usando RPC
@@ -179,42 +200,75 @@ export function FinancePage() {
       ) : (
         <>
           {/* CARDS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 flex flex-col relative overflow-hidden">
               <div className="absolute top-0 right-0 p-6 opacity-10">
                 <TrendingUp className="w-16 h-16 text-emerald-500" />
               </div>
-              <h3 className="text-sm font-semibold text-coffee-500 mb-1">Receita Total</h3>
-              <p className="text-3xl font-bold text-coffee-900 mb-2">
-                R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              <p className="text-sm font-semibold text-emerald-700 mb-1 z-10">Receita Bruta (PDV + Manual)</p>
+              <h3 className="text-3xl font-black text-emerald-950 z-10">R$ {totalRevenue.toFixed(2).replace('.', ',')}</h3>
+              <p className="text-xs text-emerald-600 mt-2 font-medium z-10">
+                PDV: R$ {posRevenue.toFixed(2).replace('.', ',')} | Entradas: R$ {manualRevenue.toFixed(2).replace('.', ',')}
               </p>
-              <div className="text-xs text-coffee-400 font-medium space-x-2">
-                <span>PDV: R$ {posRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                <span>•</span>
-                <span>Extra: R$ {manualRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-              </div>
             </div>
-
+            
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-red-100 flex flex-col relative overflow-hidden">
               <div className="absolute top-0 right-0 p-6 opacity-10">
                 <TrendingDown className="w-16 h-16 text-red-500" />
               </div>
-              <h3 className="text-sm font-semibold text-coffee-500 mb-1">Total de Despesas</h3>
-              <p className="text-3xl font-bold text-red-600">
-                R$ {totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </p>
+              <p className="text-sm font-semibold text-red-700 mb-1 z-10">Despesas / Saídas</p>
+              <h3 className="text-3xl font-black text-red-950 z-10">R$ {totalExpenses.toFixed(2).replace('.', ',')}</h3>
+              <p className="text-xs text-red-600 mt-2 font-medium z-10">Todas as saídas manuais do período</p>
             </div>
 
-            <div className={`bg-white p-6 rounded-2xl shadow-sm border ${netProfit >= 0 ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'} flex flex-col relative overflow-hidden`}>
+            <div className={`p-6 rounded-2xl shadow-sm border flex flex-col relative overflow-hidden ${netProfit >= 0 ? 'bg-brand-50 border-brand-200' : 'bg-red-50 border-red-200'}`}>
               <div className="absolute top-0 right-0 p-6 opacity-10">
-                <DollarSign className={`w-16 h-16 ${netProfit >= 0 ? 'text-emerald-500' : 'text-red-500'}`} />
+                <DollarSign className={`w-16 h-16 ${netProfit >= 0 ? 'text-brand-600' : 'text-red-600'}`} />
               </div>
-              <h3 className="text-sm font-semibold text-coffee-600 mb-1">Lucro Líquido</h3>
-              <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
-                R$ {netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              <p className={`text-sm font-semibold mb-1 z-10 ${netProfit >= 0 ? 'text-brand-800' : 'text-red-800'}`}>Resultado Líquido</p>
+              <h3 className={`text-3xl font-black z-10 ${netProfit >= 0 ? 'text-brand-950' : 'text-red-950'}`}>R$ {netProfit.toFixed(2).replace('.', ',')}</h3>
+              <p className={`text-xs mt-2 font-medium z-10 ${netProfit >= 0 ? 'text-brand-700' : 'text-red-700'}`}>
+                {netProfit >= 0 ? 'Lucro no período' : 'Prejuízo no período'}
               </p>
             </div>
           </div>
+
+          {/* GRÁFICO DE FATURAMENTO DIÁRIO */}
+          {selectedMonth && dailyRevenue.length > 0 && (
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-coffee-100 mb-8 print:break-inside-avoid">
+              <div className="flex items-center gap-2 mb-6">
+                <BarChart3 className="w-5 h-5 text-brand-600" />
+                <h3 className="text-lg font-bold text-coffee-950">Faturamento Diário do PDV</h3>
+              </div>
+              <div className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dailyRevenue} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#64748b', fontSize: 12 }} 
+                      dy={10}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#64748b', fontSize: 12 }}
+                      tickFormatter={(value) => `R$ ${value}`}
+                    />
+                    <Tooltip 
+                      cursor={{ fill: '#f8fafc' }}
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      formatter={(value: any) => [`R$ ${Number(value).toFixed(2).replace('.', ',')}`, 'Faturamento']}
+                      labelStyle={{ color: '#0f172a', fontWeight: 'bold', marginBottom: '4px' }}
+                    />
+                    <Bar dataKey="total" fill="#D97706" radius={[4, 4, 0, 0]} barSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
 
           {/* TABELA LIVRO CAIXA */}
           <div className="bg-white rounded-2xl shadow-sm border border-coffee-100 overflow-hidden">
