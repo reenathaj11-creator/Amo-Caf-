@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/services/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2 } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, ArrowLeft, Printer } from 'lucide-react';
 import { TransactionModal } from './components/TransactionModal';
 
 export function FinancePage() {
@@ -95,14 +95,30 @@ export function FinancePage() {
   const totalRevenue = posRevenue + manualRevenue;
   const netProfit = totalRevenue - totalExpenses;
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-coffee-950">Livro Caixa (Financeiro)</h2>
-          <p className="text-coffee-600">Acompanhamento completo de entradas, saídas e lucro.</p>
+    <div className="space-y-6 print:p-0 print:m-0 print:bg-white">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="icon" className="rounded-xl border-coffee-200" onClick={() => window.location.href = '/admin/relatorios'}>
+            <ArrowLeft className="w-5 h-5 text-coffee-600" />
+          </Button>
+          <div>
+            <h2 className="text-2xl font-bold text-coffee-950">Livro Caixa (Financeiro)</h2>
+            <p className="text-coffee-600">Acompanhamento completo de entradas, saídas e lucro.</p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <Button 
+            onClick={handlePrint}
+            className="h-10 bg-coffee-900 hover:bg-coffee-950 text-white rounded-xl shadow-sm gap-2 font-bold"
+          >
+            <Printer className="w-5 h-5" />
+            <span className="hidden sm:inline">Imprimir</span>
+          </Button>
           <Input 
             type="month" 
             value={selectedMonth} 
@@ -121,9 +137,14 @@ export function FinancePage() {
             className="h-10 bg-brand-500 hover:bg-brand-600 text-white rounded-xl shadow-sm gap-2 font-bold ml-auto sm:ml-2"
           >
             <Plus className="w-5 h-5" />
-            Novo Lançamento
+            <span className="hidden sm:inline">Novo</span> Lançamento
           </Button>
         </div>
+      </div>
+
+      <div className="print:block hidden mb-8 text-center border-b-2 border-coffee-900 pb-4">
+        <h1 className="text-2xl font-black uppercase text-coffee-950">Relatório Financeiro</h1>
+        <p className="text-sm font-medium text-coffee-600">Período: {selectedMonth.split('-').reverse().join('/') || 'Geral'} | Impresso em: {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR')}</p>
       </div>
 
       {loading ? (

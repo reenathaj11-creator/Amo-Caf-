@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LockKeyhole, LockKeyholeOpen, ShoppingBag, Package, BarChart2, Users, Settings, Tag, LayoutDashboard, Menu, X, LogOut, ChevronDown, CircleDollarSign } from 'lucide-react';
+import { LockKeyhole, LockKeyholeOpen, ShoppingBag, Package, BarChart2, Users, Settings, Tag, LayoutDashboard, Menu, X, LogOut, ChevronDown } from 'lucide-react';
 import { useCashRegister } from '@/contexts/CashRegisterContext';
 import { CashRegisterModal } from '@/pages/pos/components/CashRegisterModal';
 import { supabase } from '@/services/supabase/client';
@@ -58,10 +58,8 @@ export function TopHeader() {
           <NavItem icon={<LayoutDashboard className="w-5 h-5" />} label="Dashboard" to="/admin" exact onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem icon={<Package className="w-5 h-5" />} label="Produtos" to="/admin/produtos" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem icon={<Tag className="w-5 h-5" />} label="Categorias" to="/admin/categorias" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem icon={<BarChart2 className="w-5 h-5" />} label="Vendas" to="/admin/vendas" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem icon={<Users className="w-5 h-5" />} label="Clientes" to="/admin/clientes" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem icon={<BarChart2 className="w-5 h-5" />} label="Relatórios" to="/admin/relatorios" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem icon={<CircleDollarSign className="w-5 h-5" />} label="Financeiro" to="/admin/financeiro" onClick={() => setIsMobileMenuOpen(false)} />
         </>
       )}
     </>

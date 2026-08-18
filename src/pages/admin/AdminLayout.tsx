@@ -4,10 +4,12 @@ import { TopHeader } from '@/components/layout/TopHeader';
 import { Dashboard } from './Dashboard';
 import { ProductsList } from './products/ProductsList';
 import { CategoriesList } from './categories/CategoriesList';
-import { SalesList } from './sales/SalesList';
 import { CustomersList } from './customers/CustomersList';
-import { ReportsPage } from './reports/ReportsPage';
 import { FinancePage } from './finance/FinancePage';
+import { ReportsIndex } from './reports/ReportsIndex';
+import { SalesReport } from './reports/SalesReport';
+import { CashRegisterReport } from './reports/CashRegisterReport';
+import { DebtorsReport } from './reports/DebtorsReport';
 
 export function AdminLayout() {
   return (
@@ -19,9 +21,14 @@ export function AdminLayout() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/produtos/*" element={<ProductsList />} />
             <Route path="/categorias/*" element={<CategoriesList />} />
-            <Route path="/vendas" element={<SalesList />} />
             <Route path="/clientes/*" element={<CustomersList />} />
-            <Route path="/relatorios" element={<ReportsPage />} />
+            
+            {/* Novas Rotas de Relatórios */}
+            <Route path="/relatorios" element={<ReportsIndex />} />
+            <Route path="/relatorios/vendas" element={<SalesReport />} />
+            <Route path="/relatorios/caixa" element={<CashRegisterReport />} />
+            <Route path="/relatorios/devedores" element={<DebtorsReport />} />
+            
             <Route path="/financeiro/*" element={<FinancePage />} />
             <Route path="*" element={<div className="text-slate-500">Página em construção</div>} />
           </Routes>
