@@ -36,7 +36,6 @@ export function CartSidebar({ onCheckout, isOpen, onClose }: CartSidebarProps) {
         modifiers: c.modifiers
       }));
       
-      const role = localStorage.getItem('@amocafe:role') || 'admin';
       const userName = localStorage.getItem('@amocafe:user') || 'Caixa';
       const cashierName = userName.split('@')[0];
 

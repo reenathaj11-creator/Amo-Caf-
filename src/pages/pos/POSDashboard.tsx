@@ -19,7 +19,6 @@ export function POSDashboard() {
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const { cart, clearCart, total, categories } = usePOS()
-  const userName = localStorage.getItem('@amocafe:user') || 'Felipe';
 
   useEffect(() => {
     if (categories.length > 0 && !activeCategory) {
