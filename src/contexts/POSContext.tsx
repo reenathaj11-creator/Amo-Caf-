@@ -37,6 +37,8 @@ interface POSContextType {
   discount: number;
   setDiscount: (val: number) => void;
   total: number;
+  isToGo: boolean;
+  setIsToGo: (val: boolean) => void;
   // Catalog Data
   products: Product[];
   categories: Category[];
@@ -48,6 +50,7 @@ const POSContext = createContext<POSContextType | undefined>(undefined);
 export function POSProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discount, setDiscount] = useState(0);
+  const [isToGo, setIsToGo] = useState(false);
 
   // Catalog State
   const [products, setProducts] = useState<Product[]>([]);
@@ -152,6 +155,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   const clearCart = () => {
     setCart([]);
     setDiscount(0);
+    setIsToGo(false);
   };
 
   const subtotal = useMemo(() => {
@@ -174,6 +178,8 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
         discount,
         setDiscount,
         total,
+        isToGo,
+        setIsToGo,
         products,
         categories,
         loadingCatalog,

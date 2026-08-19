@@ -8,6 +8,8 @@ export interface PrintReceiptParams {
   cashReceived?: number;
   change?: number;
   cashierName: string;
+  isToGo?: boolean;
+  isPreCheckout?: boolean;
 }
 
 export interface PrintReportParams {

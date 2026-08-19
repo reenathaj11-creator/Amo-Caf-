@@ -55,13 +55,13 @@ export function CategoryNav({ activeCategory, onSelect }: CategoryNavProps) {
               key={category.id}
               onClick={() => onSelect(category.name)}
               className={cn(
-                "relative flex-1 min-w-[80px] sm:min-w-[100px] h-[80px] lg:h-[90px] flex flex-col items-center justify-center transition-all select-none rounded-2xl font-bold text-white shadow-sm hover:shadow-md shrink-0 lg:shrink",
+                "relative flex-1 min-w-[70px] sm:min-w-[85px] h-[60px] lg:h-[70px] flex flex-col items-center justify-center transition-all select-none rounded-xl font-bold text-white shadow-sm hover:shadow-md shrink-0 lg:shrink",
                 baseColor,
                 isActive ? "scale-105 shadow-md z-10 ring-2 ring-white ring-offset-2" : "opacity-90 hover:opacity-100"
               )}
             >
-              <Icon className="w-6 h-6 mb-1 opacity-90" />
-              <span className="text-xs lg:text-sm whitespace-nowrap">{category.name}</span>
+              <Icon className="w-5 h-5 mb-1 opacity-90" />
+              <span className="text-[10px] lg:text-xs whitespace-nowrap">{category.name}</span>
               
               {isActive && (
                 <div 

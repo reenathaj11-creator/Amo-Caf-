@@ -1,8 +1,12 @@
+import { useState } from "react"
 import { usePOS } from "@/contexts/POSContext"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Trash2, Plus, Minus, CreditCard, X, ShoppingBag } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { Trash2, Plus, Minus, CreditCard, X, ShoppingBag, Printer, Loader2, Unlock } from "lucide-react"
 import { useKeyPress } from "@/hooks/useKeyPress"
+import { printerService } from "@/services/printerService"
 
 import { cn } from "@/lib/utils"
 
@@ -13,11 +17,48 @@ interface CartSidebarProps {
 }
 
 export function CartSidebar({ onCheckout, isOpen, onClose }: CartSidebarProps) {
-  const { cart, updateQuantity, removeFromCart, clearCart, subtotal, total } = usePOS();
+  const { cart, updateQuantity, removeFromCart, clearCart, subtotal, total, discount, isToGo, setIsToGo } = usePOS();
+  const [isPrintingPreview, setIsPrintingPreview] = useState(false);
 
   useKeyPress('Escape', () => {
     if (cart.length > 0) clearCart();
   });
+
+  const handlePrintPreview = async () => {
+    if (cart.length === 0) return;
+    setIsPrintingPreview(true);
+    try {
+      const itemsForPrinter = cart.map(c => ({
+        name: c.product.name,
+        quantity: c.quantity,
+        price: c.product.price,
+        subtotal: c.subtotal,
+        modifiers: c.modifiers
+      }));
+      
+      const role = localStorage.getItem('@amocafe:role') || 'admin';
+      const userName = localStorage.getItem('@amocafe:user') || 'Caixa';
+      const cashierName = userName.split('@')[0];
+
+      await printerService.printReceipt({
+        orderId: "PREVIA", // dummy order ID
+        items: itemsForPrinter,
+        subtotal: subtotal,
+        discount: discount,
+        total: total,
+        paymentMethod: "NAO PAGO",
+        cashierName: cashierName,
+        isToGo: isToGo,
+        isPreCheckout: true // Flag to tell the printer server it's just a preview
+      });
+      // Optionally notify user here
+    } catch (error) {
+      console.error("Erro ao imprimir prévia:", error);
+      alert("Erro ao enviar para impressora.");
+    } finally {
+      setIsPrintingPreview(false);
+    }
+  };
 
   return (
     <>
@@ -141,19 +182,59 @@ export function CartSidebar({ onCheckout, isOpen, onClose }: CartSidebarProps) {
         
         <div className="border-t border-dashed border-coffee-200 w-full mb-4" />
         
-        <div className="flex items-center justify-between font-black text-2xl text-coffee-950 mb-6">
+        <div className="flex items-center justify-between font-black text-2xl text-coffee-950 mb-4">
           <span>Total</span>
           <span className="text-brand-500 text-3xl tracking-tight">R$ {total.toFixed(2).replace('.', ',')}</span>
         </div>
 
-        <Button 
-          className="w-full h-16 text-xl font-bold bg-[#33845B] hover:bg-[#2A6D4B] text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
-          disabled={cart.length === 0}
-          onClick={onCheckout}
-        >
-          <CreditCard className="w-6 h-6 mr-2" />
-          Cobrar (F4)
-        </Button>
+        <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-coffee-100 mb-4 shadow-sm">
+          <Label htmlFor="to-go-switch" className="flex flex-col gap-1 cursor-pointer">
+            <span className="font-bold text-coffee-950">Pedido Para Levar</span>
+            <span className="text-xs text-coffee-500">Embalar para viagem</span>
+          </Label>
+          <Switch 
+            id="to-go-switch" 
+            checked={isToGo} 
+            onCheckedChange={setIsToGo}
+            className="data-[state=checked]:bg-brand-500"
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              className="w-1/2 h-12 font-bold border-coffee-200 text-coffee-700 hover:bg-coffee-50 rounded-xl"
+              disabled={cart.length === 0 || isPrintingPreview}
+              onClick={handlePrintPreview}
+            >
+              {isPrintingPreview ? (
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              ) : (
+                <Printer className="w-5 h-5 mr-2" />
+              )}
+              Imprimir
+            </Button>
+
+            <Button 
+              variant="outline"
+              className="w-1/2 h-12 font-bold border-coffee-200 text-coffee-700 hover:bg-coffee-50 rounded-xl"
+              onClick={() => printerService.openCashDrawer()}
+            >
+              <Unlock className="w-5 h-5 mr-2" />
+              Abrir Gaveta
+            </Button>
+          </div>
+
+          <Button 
+            className="w-full h-16 text-xl font-bold bg-[#33845B] hover:bg-[#2A6D4B] text-white rounded-xl shadow-md hover:-translate-y-0.5 transition-all"
+            disabled={cart.length === 0}
+            onClick={onCheckout}
+          >
+            <CreditCard className="w-6 h-6 mr-2" />
+            Cobrar (F4)
+          </Button>
+        </div>
       </div>
     </aside>
     </>

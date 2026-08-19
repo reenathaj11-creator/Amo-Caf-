@@ -47,55 +47,51 @@ export function POSDashboard() {
       {/* Esquerda: Conteúdo Principal */}
       <div className="flex-1 flex flex-col min-w-0 p-4 lg:p-6 lg:pl-8">
         
-        {/* Header com Saudação e Pesquisa */}
-        <div className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center text-xl lg:text-3xl text-coffee-900 tracking-tight">
-            <span className="text-xl lg:text-2xl mr-2">☕</span>
-            Olá, <span className="font-bold text-brand-500 mx-1 lg:mx-2">{userName.split('@')[0]}!</span>
-            <span className="hidden sm:inline ml-1">O que vamos servir hoje?</span>
+        {/* Header com Categorias e Pesquisa */}
+        <div className="mb-4 flex flex-row items-center justify-between gap-2 lg:gap-4">
+          <div className="flex-1 overflow-hidden">
+            <CategoryNav 
+              activeCategory={activeCategory} 
+              onSelect={setActiveCategory} 
+            />
           </div>
 
           {/* Área de Pesquisa */}
-          <div className="flex items-center justify-end h-12 relative">
+          <div className="flex items-center justify-end h-12 relative shrink-0 pt-2 pb-4">
             {!isSearchOpen ? (
               <Button 
                 variant="outline" 
                 size="icon" 
-                className="h-12 w-12 text-brand-600 hover:text-brand-700 hover:bg-brand-50 rounded-full border-brand-200 shadow-sm bg-white"
+                className="h-10 w-10 lg:h-12 lg:w-12 text-brand-600 hover:text-brand-700 hover:bg-brand-50 rounded-full border-brand-200 shadow-sm bg-white"
                 onClick={() => setIsSearchOpen(true)}
               >
-                <Search className="w-6 h-6" strokeWidth={2.5} />
+                <Search className="w-5 h-5 lg:w-6 lg:h-6" strokeWidth={2.5} />
               </Button>
             ) : (
-              <div className="relative w-full sm:w-72 animate-in slide-in-from-right-5 fade-in duration-200">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-500 w-5 h-5" strokeWidth={2.5} />
+              <div className="relative w-full sm:w-60 lg:w-72 animate-in slide-in-from-right-5 fade-in duration-200">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-500 w-4 h-4 lg:w-5 lg:h-5" strokeWidth={2.5} />
                 <Input 
                   ref={searchInputRef}
-                  placeholder="Pesquisar produto..." 
+                  placeholder="Pesquisar..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-10 h-12 text-base rounded-full border-brand-300 focus-visible:ring-brand-500 bg-white shadow-sm"
+                  className="pl-10 pr-10 h-10 lg:h-12 text-sm lg:text-base rounded-full border-brand-300 focus-visible:ring-brand-500 bg-white shadow-sm"
                 />
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 text-gray-400 hover:text-gray-700 rounded-full"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 text-gray-400 hover:text-gray-700 rounded-full"
                   onClick={() => {
                     setSearchQuery("");
                     setIsSearchOpen(false);
                   }}
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4 lg:w-5 lg:h-5" />
                 </Button>
               </div>
             )}
           </div>
         </div>
-
-        <CategoryNav 
-          activeCategory={activeCategory} 
-          onSelect={setActiveCategory} 
-        />
         
         <div className="flex-1 overflow-auto mt-4 lg:mt-6 pb-24 lg:pb-20">
           <ProductGrid activeCategory={activeCategory} searchQuery={searchQuery} />

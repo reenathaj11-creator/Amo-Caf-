@@ -54,12 +54,22 @@ app.post('/print', async (req, res) => {
     const senha = numbersOnly.substring(0, 4);
 
     // ==========================================
-    // VIA DO BALCÃO
+    // VIA DO BALCÃO / PREPARO
     // ==========================================
     printer.alignCenter();
     printer.bold(true);
     printer.setTextSize(1, 1);
-    printer.println("VIA DO BALCAO");
+    if (data.isPreCheckout) {
+      printer.println("MESA / PRE-CONTA");
+    } else {
+      printer.println("VIA DO BALCAO");
+    }
+    
+    if (data.isToGo) {
+      printer.println(">>> PARA LEVAR <<<");
+    } else if (!data.isPreCheckout) {
+      printer.println(">>> COMER NO LOCAL <<<");
+    }
     printer.bold(false);
     printer.setTextNormal();
     printer.drawLine();
@@ -108,12 +118,33 @@ app.post('/print', async (req, res) => {
 
     printer.alignCenter();
     printer.setTextSize(1, 1);
-    printer.println(`SENHA PARA RETIRADA:`);
+    if (data.isPreCheckout) {
+      printer.println(`PRE-CONTA - CONFERENCIA`);
+    } else {
+      printer.println(`SENHA PARA RETIRADA:`);
+    }
     printer.bold(true);
     printer.setTextSize(2, 2);
     printer.println(`${senha}`);
     printer.bold(false);
     printer.setTextNormal();
+
+    if (data.isToGo) {
+      printer.alignCenter();
+      printer.bold(true);
+      printer.setTextSize(1, 1);
+      printer.println(">>> PARA LEVAR <<<");
+      printer.bold(false);
+      printer.setTextNormal();
+    } else if (!data.isPreCheckout) {
+      printer.alignCenter();
+      printer.bold(true);
+      printer.setTextSize(1, 1);
+      printer.println(">>> COMER NO LOCAL <<<");
+      printer.bold(false);
+      printer.setTextNormal();
+    }
+    
     printer.drawLine();
 
     printer.alignLeft();
@@ -152,15 +183,23 @@ app.post('/print', async (req, res) => {
     printer.drawLine();
 
     printer.alignLeft();
-    printer.println(`Forma de Pagamento: ${data.paymentMethod}`);
-    if (data.cashReceived !== undefined && data.change !== undefined) {
-      printer.println(`Valor Recebido: R$ ${data.cashReceived.toFixed(2)}`);
-      printer.println(`Troco: R$ ${data.change.toFixed(2)}`);
+    if (data.isPreCheckout) {
+      printer.println(`Pagamento: AINDA NAO PAGO`);
+    } else {
+      printer.println(`Forma de Pagamento: ${data.paymentMethod}`);
+      if (data.cashReceived !== undefined && data.change !== undefined) {
+        printer.println(`Valor Recebido: R$ ${data.cashReceived.toFixed(2)}`);
+        printer.println(`Troco: R$ ${data.change.toFixed(2)}`);
+      }
     }
 
     printer.drawLine();
     printer.alignCenter();
-    printer.println("Aguarde ser chamado pela senha!");
+    if (data.isPreCheckout) {
+      printer.println("Dirija-se ao caixa para pagamento.");
+    } else {
+      printer.println("Aguarde ser chamado pela senha!");
+    }
     printer.println("Obrigado pela preferencia!");
 
     printer.cut();

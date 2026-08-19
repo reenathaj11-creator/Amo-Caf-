@@ -18,7 +18,7 @@ interface CheckoutModalProps {
 type PaymentMethod = "Dinheiro" | "Cartão de Crédito" | "Cartão de Débito" | "PIX" | "Na Conta";
 
 export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
-  const { cart, subtotal, discount, total, clearCart } = usePOS();
+  const { cart, subtotal, discount, total, clearCart, isToGo } = usePOS();
   const { isOpen: isRegisterOpen, addOperation } = useCashRegister();
   const [method, setMethod] = useState<PaymentMethod | null>(null);
   const [cashReceived, setCashReceived] = useState<string>("");
@@ -122,7 +122,8 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
         paymentMethod: method,
         cashReceived: method === "Dinheiro" ? numericCash : undefined,
         change: method === "Dinheiro" ? change : undefined,
-        cashierName: user?.email || "Caixa",
+        cashierName: user?.email?.split('@')[0] || "Caixa",
+        isToGo: isToGo
       };
 
       await printerService.printReceipt(printParams);
