@@ -14,7 +14,7 @@ export function ProductGrid({ activeCategory, searchQuery }: { activeCategory: s
   
   const [optionsModalOpen, setOptionsModalOpen] = useState(false);
   const [selectedProductWithOptions, setSelectedProductWithOptions] = useState<Product | null>(null);
-  const [pendingComboOrder, setPendingComboOrder] = useState<{combo: Product, bebida: Product, lanche: Product} | null>(null);
+  const [pendingComboOrder, setPendingComboOrder] = useState<{combo: Product, bebida: Product, lanche: Product, baseExtraPrice: number} | null>(null);
 
   // State for active subcategory view
   const [activeSubcategoryId, setActiveSubcategoryId] = useState<string | null>(null);
@@ -116,6 +116,21 @@ export function ProductGrid({ activeCategory, searchQuery }: { activeCategory: s
   const handleComboConfirm = (bebida: Product, lanche: Product) => {
     if (!selectedCombo) return;
     
+    // Parse extra price directly from the names, e.g. "CAFE COM LEITE (+1)"
+    let baseExtraPrice = 0;
+    const priceRegex = /\(\s*\+\s*([\d.,]+)\s*\)/;
+    
+    [bebida.name, lanche.name].forEach(name => {
+      const match = name.match(priceRegex);
+      if (match && match[1]) {
+        const priceString = match[1].replace(',', '.');
+        const price = parseFloat(priceString);
+        if (!isNaN(price)) {
+          baseExtraPrice += price;
+        }
+      }
+    });
+    
     const hasBebidaOptions = bebida.options && bebida.options.length > 0;
     const hasLancheOptions = lanche.options && lanche.options.length > 0;
     
@@ -129,21 +144,21 @@ export function ProductGrid({ activeCategory, searchQuery }: { activeCategory: s
           ...(lanche.options || []).map(opt => ({ ...opt, name: `[${lanche.name}] ${opt.name}` }))
         ]
       };
-      setPendingComboOrder({ combo: selectedCombo, bebida, lanche });
+      setPendingComboOrder({ combo: selectedCombo, bebida, lanche, baseExtraPrice });
       setSelectedProductWithOptions(comboWithOptions);
       setComboModalOpen(false);
       setOptionsModalOpen(true);
     } else {
-      addToCart(selectedCombo, 1, [`Lanche: ${lanche.name}`, `Bebida: ${bebida.name}`]);
+      addToCart(selectedCombo, 1, [`Lanche: ${lanche.name}`, `Bebida: ${bebida.name}`], baseExtraPrice);
       setComboModalOpen(false);
     }
   };
 
   const handleOptionsConfirm = (modifiers: string[], extraPrice: number) => {
     if (pendingComboOrder) {
-      const { combo, bebida, lanche } = pendingComboOrder;
+      const { combo, bebida, lanche, baseExtraPrice } = pendingComboOrder;
       const combinedModifiers = [`Lanche: ${lanche.name}`, `Bebida: ${bebida.name}`, ...modifiers];
-      addToCart(combo, 1, combinedModifiers, extraPrice);
+      addToCart(combo, 1, combinedModifiers, extraPrice + baseExtraPrice);
       setPendingComboOrder(null);
     } else if (selectedProductWithOptions) {
       addToCart(selectedProductWithOptions, 1, modifiers, extraPrice);
