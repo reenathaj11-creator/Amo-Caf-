@@ -8,14 +8,14 @@ import { Search } from "lucide-react";
 interface ComboModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (bebida: string, lanche: string) => void;
+  onConfirm: (bebida: Product, lanche: Product) => void;
   comboProduct: Product | null;
   allProducts: Product[];
 }
 
 export function ComboModal({ isOpen, onClose, onConfirm, comboProduct, allProducts }: ComboModalProps) {
-  const [selectedBebida, setSelectedBebida] = useState<string>("");
-  const [selectedLanche, setSelectedLanche] = useState<string>("");
+  const [selectedBebida, setSelectedBebida] = useState<Product | null>(null);
+  const [selectedLanche, setSelectedLanche] = useState<Product | null>(null);
   const [searchBebida, setSearchBebida] = useState("");
   const [searchLanche, setSearchLanche] = useState("");
 
@@ -50,15 +50,15 @@ export function ComboModal({ isOpen, onClose, onConfirm, comboProduct, allProduc
     if (!selectedBebida || !selectedLanche) return;
     onConfirm(selectedBebida, selectedLanche);
     // Limpar
-    setSelectedBebida("");
-    setSelectedLanche("");
+    setSelectedBebida(null);
+    setSelectedLanche(null);
     setSearchBebida("");
     setSearchLanche("");
   };
 
   const handleClose = () => {
-    setSelectedBebida("");
-    setSelectedLanche("");
+    setSelectedBebida(null);
+    setSelectedLanche(null);
     setSearchBebida("");
     setSearchLanche("");
     onClose();
@@ -96,9 +96,9 @@ export function ComboModal({ isOpen, onClose, onConfirm, comboProduct, allProduc
                 {filteredLanches.map(l => (
                   <div
                     key={l.id}
-                    onClick={() => setSelectedLanche(l.name)}
+                    onClick={() => setSelectedLanche(l)}
                     className={`p-3 rounded-lg border cursor-pointer transition-all text-center flex items-center justify-center min-h-[60px]
-                      ${selectedLanche === l.name 
+                      ${selectedLanche?.id === l.id 
                         ? 'bg-brand-500 text-white border-brand-600 shadow-md scale-[1.02]' 
                         : 'bg-white text-coffee-900 border-gray-200 hover:border-brand-300 hover:bg-brand-50'
                       }`}
@@ -130,9 +130,9 @@ export function ComboModal({ isOpen, onClose, onConfirm, comboProduct, allProduc
                 {filteredBebidas.map(b => (
                   <div
                     key={b.id}
-                    onClick={() => setSelectedBebida(b.name)}
+                    onClick={() => setSelectedBebida(b)}
                     className={`p-3 rounded-lg border cursor-pointer transition-all text-center flex items-center justify-center min-h-[60px]
-                      ${selectedBebida === b.name 
+                      ${selectedBebida?.id === b.id 
                         ? 'bg-brand-500 text-white border-brand-600 shadow-md scale-[1.02]' 
                         : 'bg-white text-coffee-900 border-gray-200 hover:border-brand-300 hover:bg-brand-50'
                       }`}
@@ -147,8 +147,8 @@ export function ComboModal({ isOpen, onClose, onConfirm, comboProduct, allProduc
 
         <DialogFooter className="p-4 border-t bg-white flex justify-between items-center sm:justify-between">
           <div className="flex flex-col">
-            <span className="text-sm text-coffee-500">Lanche: <strong className="text-coffee-900 uppercase">{selectedLanche || '---'}</strong></span>
-            <span className="text-sm text-coffee-500">Bebida: <strong className="text-coffee-900 uppercase">{selectedBebida || '---'}</strong></span>
+            <span className="text-sm text-coffee-500">Lanche: <strong className="text-coffee-900 uppercase">{selectedLanche?.name || '---'}</strong></span>
+            <span className="text-sm text-coffee-500">Bebida: <strong className="text-coffee-900 uppercase">{selectedBebida?.name || '---'}</strong></span>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleClose}>Cancelar</Button>

@@ -14,6 +14,7 @@ export function ProductGrid({ activeCategory, searchQuery }: { activeCategory: s
   
   const [optionsModalOpen, setOptionsModalOpen] = useState(false);
   const [selectedProductWithOptions, setSelectedProductWithOptions] = useState<Product | null>(null);
+  const [pendingComboOrder, setPendingComboOrder] = useState<{combo: Product, bebida: Product, lanche: Product} | null>(null);
 
   // State for active subcategory view
   const [activeSubcategoryId, setActiveSubcategoryId] = useState<string | null>(null);
@@ -112,18 +113,47 @@ export function ProductGrid({ activeCategory, searchQuery }: { activeCategory: s
     }
   };
 
-  const handleComboConfirm = (bebida: string, lanche: string) => {
-    if (selectedCombo) {
-      addToCart(selectedCombo, 1, [`Lanche: ${lanche}`, `Bebida: ${bebida}`]);
+  const handleComboConfirm = (bebida: Product, lanche: Product) => {
+    if (!selectedCombo) return;
+    
+    const hasBebidaOptions = bebida.options && bebida.options.length > 0;
+    const hasLancheOptions = lanche.options && lanche.options.length > 0;
+    
+    if (hasBebidaOptions || hasLancheOptions) {
+      // Create a fake product to show options for both
+      const comboWithOptions: Product = {
+        ...selectedCombo,
+        name: `Adicionais: ${selectedCombo.name}`,
+        options: [
+          ...(bebida.options || []).map(opt => ({ ...opt, name: `[${bebida.name}] ${opt.name}` })),
+          ...(lanche.options || []).map(opt => ({ ...opt, name: `[${lanche.name}] ${opt.name}` }))
+        ]
+      };
+      setPendingComboOrder({ combo: selectedCombo, bebida, lanche });
+      setSelectedProductWithOptions(comboWithOptions);
+      setComboModalOpen(false);
+      setOptionsModalOpen(true);
+    } else {
+      addToCart(selectedCombo, 1, [`Lanche: ${lanche.name}`, `Bebida: ${bebida.name}`]);
+      setComboModalOpen(false);
     }
-    setComboModalOpen(false);
   };
 
   const handleOptionsConfirm = (modifiers: string[], extraPrice: number) => {
-    if (selectedProductWithOptions) {
+    if (pendingComboOrder) {
+      const { combo, bebida, lanche } = pendingComboOrder;
+      const combinedModifiers = [`Lanche: ${lanche.name}`, `Bebida: ${bebida.name}`, ...modifiers];
+      addToCart(combo, 1, combinedModifiers, extraPrice);
+      setPendingComboOrder(null);
+    } else if (selectedProductWithOptions) {
       addToCart(selectedProductWithOptions, 1, modifiers, extraPrice);
     }
     setOptionsModalOpen(false);
+  };
+
+  const handleOptionsModalClose = () => {
+    setOptionsModalOpen(false);
+    setPendingComboOrder(null);
   };
 
   return (
@@ -203,7 +233,7 @@ export function ProductGrid({ activeCategory, searchQuery }: { activeCategory: s
 
     <OptionsModal
       isOpen={optionsModalOpen}
-      onClose={() => setOptionsModalOpen(false)}
+      onClose={handleOptionsModalClose}
       onConfirm={handleOptionsConfirm}
       product={selectedProductWithOptions}
     />
