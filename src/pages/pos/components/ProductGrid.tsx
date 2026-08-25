@@ -4,12 +4,16 @@ import type { Product } from "@/contexts/POSContext"
 import { Card } from "@/components/ui/card"
 import { Loader2, Folder, ArrowLeft } from "lucide-react"
 import { ComboModal } from "./ComboModal"
+import { OptionsModal } from "./OptionsModal"
 import { Button } from "@/components/ui/button"
 
 export function ProductGrid({ activeCategory, searchQuery }: { activeCategory: string, searchQuery?: string }) {
   const { products, loadingCatalog, addToCart } = usePOS();
   const [comboModalOpen, setComboModalOpen] = useState(false);
   const [selectedCombo, setSelectedCombo] = useState<Product | null>(null);
+  
+  const [optionsModalOpen, setOptionsModalOpen] = useState(false);
+  const [selectedProductWithOptions, setSelectedProductWithOptions] = useState<Product | null>(null);
 
   // State for active subcategory view
   const [activeSubcategoryId, setActiveSubcategoryId] = useState<string | null>(null);
@@ -100,6 +104,9 @@ export function ProductGrid({ activeCategory, searchQuery }: { activeCategory: s
     if (product.description?.includes('[COMBO_CUSTOM]')) {
       setSelectedCombo(product);
       setComboModalOpen(true);
+    } else if (product.options && product.options.length > 0) {
+      setSelectedProductWithOptions(product);
+      setOptionsModalOpen(true);
     } else {
       addToCart(product);
     }
@@ -110,6 +117,13 @@ export function ProductGrid({ activeCategory, searchQuery }: { activeCategory: s
       addToCart(selectedCombo, 1, [`Lanche: ${lanche}`, `Bebida: ${bebida}`]);
     }
     setComboModalOpen(false);
+  };
+
+  const handleOptionsConfirm = (modifiers: string[], extraPrice: number) => {
+    if (selectedProductWithOptions) {
+      addToCart(selectedProductWithOptions, 1, modifiers, extraPrice);
+    }
+    setOptionsModalOpen(false);
   };
 
   return (
@@ -185,6 +199,13 @@ export function ProductGrid({ activeCategory, searchQuery }: { activeCategory: s
       onConfirm={handleComboConfirm}
       comboProduct={selectedCombo}
       allProducts={products}
+    />
+
+    <OptionsModal
+      isOpen={optionsModalOpen}
+      onClose={() => setOptionsModalOpen(false)}
+      onConfirm={handleOptionsConfirm}
+      product={selectedProductWithOptions}
     />
     </>
   )

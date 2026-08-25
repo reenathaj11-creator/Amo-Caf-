@@ -91,8 +91,9 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
         sale_id: orderId,
         product_id: c.product.id,
         quantity: c.quantity,
-        unit_price: c.product.price,
-        total_price: c.subtotal
+        unit_price: c.product.price + (c.extraPrice || 0),
+        total_price: c.subtotal,
+        variations_text: c.modifiers.length > 0 ? c.modifiers.join(', ') : null
       }));
 
       const { error: itemsError } = await supabase.from('sale_items').insert(itemsToInsert);

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { supabase } from "@/services/supabase/client"
-import { Loader2 } from "lucide-react"
+import { Loader2, Plus, Trash2 } from "lucide-react"
 
 interface Product {
   id: string;
@@ -17,6 +17,7 @@ interface Product {
   price: number;
   image_url: string | null;
   active: boolean;
+  options?: { name: string; choices: string[] }[] | null;
 }
 
 interface ProductModalProps {
@@ -38,6 +39,7 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
   const [active, setActive] = useState(true);
   const [isComboCustom, setIsComboCustom] = useState(false);
   const [isComboItem, setIsComboItem] = useState(false);
+  const [options, setOptions] = useState<{ name: string; choices: string[] }[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -53,6 +55,7 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
         setActive(productToEdit.active);
         setIsComboCustom(productToEdit.description?.includes('[COMBO_CUSTOM]') || false);
         setIsComboItem(productToEdit.description?.includes('[COMBO_ITEM]') || false);
+        setOptions(productToEdit.options || []);
       } else {
         setName("");
         setDescription("");
@@ -63,6 +66,7 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
         setActive(true);
         setIsComboCustom(false);
         setIsComboItem(false);
+        setOptions([]);
       }
     }
   }, [isOpen, productToEdit]);
@@ -107,6 +111,12 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
         finalDescription += (finalDescription ? ' ' : '') + '[COMBO_ITEM]';
       }
 
+      // Filter out empty options
+      const validOptions = options.map(opt => ({
+        name: opt.name.trim(),
+        choices: opt.choices.map(c => c.trim()).filter(c => c)
+      })).filter(opt => opt.name && opt.choices.length > 0);
+
       const payload = {
         name,
         description: finalDescription || null,
@@ -114,7 +124,8 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
         image_url: imageUrl || null,
         category_id: categoryId,
         subcategory_id: subcategoryId === "none" ? null : subcategoryId,
-        active
+        active,
+        options: validOptions.length > 0 ? validOptions : null
       };
 
       if (productToEdit) {
@@ -138,6 +149,28 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
     } finally {
       setLoading(false);
     }
+  };
+
+  const addOption = () => {
+    setOptions([...options, { name: "", choices: [] }]);
+  };
+
+  const updateOptionName = (index: number, newName: string) => {
+    const newOptions = [...options];
+    newOptions[index].name = newName;
+    setOptions(newOptions);
+  };
+
+  const updateOptionChoices = (index: number, choicesString: string) => {
+    const newOptions = [...options];
+    newOptions[index].choices = choicesString.split(',').map(s => s.trim());
+    setOptions(newOptions);
+  };
+
+  const removeOption = (index: number) => {
+    const newOptions = [...options];
+    newOptions.splice(index, 1);
+    setOptions(newOptions);
   };
 
   const filteredSubcategories = subcategories.filter(sub => sub.category_id === categoryId);
@@ -211,6 +244,45 @@ export function ProductModal({ isOpen, onClose, onSaved, productToEdit }: Produc
           <div className="flex items-center space-x-2 mt-2">
             <Switch id="active" checked={active} onCheckedChange={setActive} />
             <Label htmlFor="active">Produto Ativo (Aparece no PDV)</Label>
+          </div>
+
+          <div className="mt-4 border-t pt-4">
+            <div className="flex justify-between items-center mb-4">
+              <Label className="text-base font-bold text-coffee-800">Opções / Variações (Opcional)</Label>
+              <Button type="button" variant="outline" size="sm" onClick={addOption}>
+                <Plus className="w-4 h-4 mr-1" /> Add Opção
+              </Button>
+            </div>
+            {options.length === 0 ? (
+              <div className="text-sm text-gray-500 italic space-y-1">
+                <p>Ex: Sabor (Chocolate, Morango), Tamanho (P, M, G)</p>
+                <p className="text-brand-600 font-medium mt-1">Dica: Para cobrar um valor adicional, coloque (+X) no final. Ex: Nutella (+1,50) ou Leite (+1)</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {options.map((opt, idx) => (
+                  <div key={idx} className="flex gap-2 items-start border p-3 rounded-md bg-slate-50">
+                    <div className="grid gap-2 flex-1">
+                      <Input 
+                        placeholder="Nome (Ex: Sabor)" 
+                        value={opt.name} 
+                        onChange={(e) => updateOptionName(idx, e.target.value)}
+                        className="bg-white"
+                      />
+                      <Input 
+                        placeholder="Opções separadas por vírgula (Ex: Limão, Leite (+1,50))" 
+                        value={opt.choices.join(', ')} 
+                        onChange={(e) => updateOptionChoices(idx, e.target.value)}
+                        className="bg-white"
+                      />
+                    </div>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeOption(idx)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
         </div>

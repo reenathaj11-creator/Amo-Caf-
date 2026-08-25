@@ -17,6 +17,7 @@ export type Product = {
   description: string | null;
   subcategory_id?: string | null;
   subcategory?: string | null;
+  options?: { name: string; choices: string[] }[] | null;
 };
 
 export type CartItem = {
@@ -24,12 +25,13 @@ export type CartItem = {
   product: Product;
   quantity: number;
   modifiers: any[];
+  extraPrice?: number;
   subtotal: number;
 };
 
 interface POSContextType {
   cart: CartItem[];
-  addToCart: (product: Product, quantity?: number, modifiers?: string[]) => void;
+  addToCart: (product: Product, quantity?: number, modifiers?: string[], extraPrice?: number) => void;
   removeFromCart: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -74,7 +76,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
         const { data: prodData, error: prodError } = await supabase
           .from('products')
           .select(`
-            id, name, price, image_url, category_id, description, subcategory_id,
+            id, name, price, image_url, category_id, description, subcategory_id, options,
             categories ( name ),
             subcategories ( name )
           `)
@@ -92,7 +94,8 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
           category_id: p.category_id,
           description: p.description,
           subcategory_id: p.subcategory_id || null,
-          subcategory: p.subcategories?.name || null
+          subcategory: p.subcategories?.name || null,
+          options: p.options
         }));
 
         setProducts(mappedProducts);
@@ -106,18 +109,20 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     loadCatalog();
   }, []);
 
-  const addToCart = (product: Product, quantity = 1, modifiers: string[] = []) => {
+  const addToCart = (product: Product, quantity = 1, modifiers: string[] = [], extraPrice = 0) => {
     setCart((prev) => {
       // Se tiver modificadores, não agrupa com itens sem modificadores ou com modificadores diferentes
       const modifiersString = JSON.stringify(modifiers);
       const existingItem = prev.find(
-        (item) => item.product.id === product.id && JSON.stringify(item.modifiers) === modifiersString
+        (item) => item.product.id === product.id && JSON.stringify(item.modifiers) === modifiersString && item.extraPrice === extraPrice
       );
       
+      const unitPrice = product.price + extraPrice;
+
       if (existingItem) {
         return prev.map((item) =>
           item.id === existingItem.id
-            ? { ...item, quantity: item.quantity + quantity, subtotal: (item.quantity + quantity) * item.product.price }
+            ? { ...item, quantity: item.quantity + quantity, subtotal: (item.quantity + quantity) * unitPrice }
             : item
         );
       }
@@ -127,7 +132,8 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
         product,
         quantity,
         modifiers,
-        subtotal: product.price * quantity,
+        extraPrice,
+        subtotal: unitPrice * quantity,
       };
       
       return [...prev, newItem];
@@ -146,7 +152,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     setCart((prev) =>
       prev.map((item) =>
         item.id === itemId
-          ? { ...item, quantity, subtotal: quantity * item.product.price }
+          ? { ...item, quantity, subtotal: quantity * (item.product.price + (item.extraPrice || 0)) }
           : item
       )
     );
