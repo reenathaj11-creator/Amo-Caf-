@@ -41,6 +41,8 @@ interface POSContextType {
   total: number;
   isToGo: boolean;
   setIsToGo: (val: boolean) => void;
+  shouldPrintReceipt: boolean;
+  setShouldPrintReceipt: (val: boolean) => void;
   // Catalog Data
   products: Product[];
   categories: Category[];
@@ -53,6 +55,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discount, setDiscount] = useState(0);
   const [isToGo, setIsToGo] = useState(false);
+  const [shouldPrintReceipt, setShouldPrintReceipt] = useState(true);
 
   // Catalog State
   const [products, setProducts] = useState<Product[]>([]);
@@ -162,6 +165,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     setCart([]);
     setDiscount(0);
     setIsToGo(false);
+    setShouldPrintReceipt(true);
   };
 
   const subtotal = useMemo(() => {
@@ -186,6 +190,8 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
         total,
         isToGo,
         setIsToGo,
+        shouldPrintReceipt,
+        setShouldPrintReceipt,
         products,
         categories,
         loadingCatalog,

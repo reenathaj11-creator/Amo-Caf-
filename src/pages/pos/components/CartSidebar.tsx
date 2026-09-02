@@ -2,9 +2,7 @@ import { useState } from "react"
 import { usePOS } from "@/contexts/POSContext"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { Trash2, Plus, Minus, CreditCard, X, ShoppingBag, Printer, Loader2, Unlock } from "lucide-react"
+import { Trash2, Plus, Minus, CreditCard, X, ShoppingBag, Printer, Loader2, Unlock, Receipt } from "lucide-react"
 import { useKeyPress } from "@/hooks/useKeyPress"
 import { printerService } from "@/services/printerService"
 
@@ -17,7 +15,7 @@ interface CartSidebarProps {
 }
 
 export function CartSidebar({ onCheckout, isOpen, onClose }: CartSidebarProps) {
-  const { cart, updateQuantity, removeFromCart, clearCart, subtotal, total, discount, isToGo, setIsToGo } = usePOS();
+  const { cart, updateQuantity, removeFromCart, clearCart, subtotal, total, discount, isToGo, setIsToGo, shouldPrintReceipt, setShouldPrintReceipt } = usePOS();
   const [isPrintingPreview, setIsPrintingPreview] = useState(false);
 
   useKeyPress('Escape', () => {
@@ -110,56 +108,56 @@ export function CartSidebar({ onCheckout, isOpen, onClose }: CartSidebarProps) {
         ) : (
           <div className="space-y-4">
             {cart.map((item) => (
-              <div key={item.id} className="flex flex-col gap-2 p-4 bg-white border border-coffee-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-start">
-                  <span className="font-bold text-sm text-coffee-950 leading-tight pr-4">
-                    {item.product.name}
-                    {item.modifiers && item.modifiers.length > 0 && (
-                      <div className="flex flex-col mt-1 space-y-0.5">
-                        {item.modifiers.map((mod: string, i: number) => (
-                          <span key={i} className="text-xs text-brand-600 font-medium">
-                            + {mod}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </span>
-                  <span className="font-bold text-sm text-coffee-900 whitespace-nowrap">
-                    R$ {item.subtotal.toFixed(2).replace('.', ',')}
-                  </span>
-                </div>
-                
-                <div className="flex items-center justify-between mt-1">
-                  <div className="flex items-center gap-3 bg-cream-50 rounded-lg p-1 border border-cream-200">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6 rounded-md bg-white shadow-sm hover:bg-cream-100 text-coffee-600"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    >
-                      <Minus className="w-3 h-3" />
-                    </Button>
-                    <span className="text-sm font-bold w-4 text-center text-coffee-900">
-                      {item.quantity}
+              <div key={item.id} className="relative p-3.5 bg-white border border-coffee-100 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="absolute top-2 right-2 h-7 w-7 text-coffee-300 hover:text-red-500 hover:bg-red-50 rounded-full"
+                  onClick={() => removeFromCart(item.id)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+
+                <div className="pr-6">
+                  <div className="font-bold text-[13px] sm:text-sm text-coffee-950 leading-[28px]">
+                    <span className="align-middle mr-2">{item.product.name}</span>
+                    
+                    <span className="inline-flex items-center bg-cream-50 rounded-md border border-cream-200 align-middle shadow-sm mr-2.5">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 rounded-md hover:bg-cream-100 text-coffee-600"
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      >
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                      <span className="text-[13px] font-black w-4 text-center text-coffee-900">
+                        {item.quantity}
+                      </span>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 rounded-md hover:bg-cream-100 text-coffee-600"
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
                     </span>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6 rounded-md bg-white shadow-sm hover:bg-cream-100 text-coffee-600"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    >
-                      <Plus className="w-3 h-3" />
-                    </Button>
+
+                    <span className="inline-block font-black text-[13px] sm:text-sm text-coffee-900 align-middle">
+                      R$ {item.subtotal.toFixed(2).replace('.', ',')}
+                    </span>
                   </div>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-coffee-300 hover:text-red-500 hover:bg-red-50"
-                    onClick={() => removeFromCart(item.id)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
+
+                  {item.modifiers && item.modifiers.length > 0 && (
+                    <div className="flex flex-col mt-0.5 space-y-0.5">
+                      {item.modifiers.map((mod: string, i: number) => (
+                        <span key={i} className="text-[11px] text-brand-600 font-bold tracking-tight">
+                          + {mod}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -167,63 +165,61 @@ export function CartSidebar({ onCheckout, isOpen, onClose }: CartSidebarProps) {
         )}
       </ScrollArea>
 
-      <div className="p-6 bg-cream-50 mt-auto">
-        <div className="space-y-3 mb-4">
-          <div className="flex justify-between text-coffee-600 text-sm font-semibold">
-            <span>Subtotal</span>
-            <span className="text-coffee-900">R$ {subtotal.toFixed(2).replace('.', ',')}</span>
-          </div>
-          <div className="flex justify-between text-coffee-600 text-sm font-semibold">
-            <span>Desconto</span>
-            <span className="text-coffee-900">R$ 0,00</span>
-          </div>
-        </div>
-        
-        <div className="border-t border-dashed border-coffee-200 w-full mb-4" />
+      <div className="p-4 lg:p-6 bg-cream-50 mt-auto shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.02)]">
         
         <div className="flex items-center justify-between font-black text-2xl text-coffee-950 mb-4">
           <span>Total</span>
           <span className="text-brand-500 text-3xl tracking-tight">R$ {total.toFixed(2).replace('.', ',')}</span>
         </div>
 
-        <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-coffee-100 mb-4 shadow-sm">
-          <Label htmlFor="to-go-switch" className="flex flex-col gap-1 cursor-pointer">
-            <span className="font-bold text-coffee-950">Pedido Para Levar</span>
-            <span className="text-xs text-coffee-500">Embalar para viagem</span>
-          </Label>
-          <Switch 
-            id="to-go-switch" 
-            checked={isToGo} 
-            onCheckedChange={setIsToGo}
-            className="data-[state=checked]:bg-brand-500"
-          />
+        <div className="flex gap-2 mb-4">
+          <Button 
+            variant={isToGo ? "default" : "outline"}
+            className={cn("flex-1 h-16 flex-col gap-1 rounded-xl transition-all p-1", isToGo ? "bg-brand-500 hover:bg-brand-600 shadow-md text-white border-transparent" : "border-coffee-200 text-coffee-600 hover:bg-white")}
+            onClick={() => setIsToGo(!isToGo)}
+            title="Pedido para Levar"
+          >
+            <ShoppingBag className="w-5 h-5" />
+            <span className="text-[10px] leading-none font-bold uppercase tracking-wider">Levar</span>
+          </Button>
+
+          <Button 
+            variant={shouldPrintReceipt ? "default" : "outline"}
+            className={cn("flex-1 h-16 flex-col gap-1 rounded-xl transition-all p-1", shouldPrintReceipt ? "bg-brand-500 hover:bg-brand-600 shadow-md text-white border-transparent" : "border-coffee-200 text-coffee-600 hover:bg-white")}
+            onClick={() => setShouldPrintReceipt(!shouldPrintReceipt)}
+            title="Imprimir Comprovante"
+          >
+            <Receipt className="w-5 h-5" />
+            <span className="text-[10px] leading-none font-bold uppercase tracking-wider">Cupom</span>
+          </Button>
+
+          <Button 
+            variant="outline"
+            className="flex-1 h-16 flex-col gap-1 rounded-xl border-coffee-200 text-coffee-600 hover:bg-white transition-all p-1 bg-transparent"
+            disabled={cart.length === 0 || isPrintingPreview}
+            onClick={handlePrintPreview}
+            title="Imprimir Prévia"
+          >
+            {isPrintingPreview ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Printer className="w-5 h-5" />
+            )}
+            <span className="text-[10px] leading-none font-bold uppercase tracking-wider">Prévia</span>
+          </Button>
+
+          <Button 
+            variant="outline"
+            className="flex-1 h-16 flex-col gap-1 rounded-xl border-coffee-200 text-coffee-600 hover:bg-white transition-all p-1 bg-transparent"
+            onClick={() => printerService.openCashDrawer()}
+            title="Abrir Gaveta"
+          >
+            <Unlock className="w-5 h-5" />
+            <span className="text-[10px] leading-none font-bold uppercase tracking-wider">Gaveta</span>
+          </Button>
         </div>
 
         <div className="flex flex-col gap-2">
-          <div className="flex gap-2">
-            <Button 
-              variant="outline"
-              className="w-1/2 h-12 font-bold border-coffee-200 text-coffee-700 hover:bg-coffee-50 rounded-xl"
-              disabled={cart.length === 0 || isPrintingPreview}
-              onClick={handlePrintPreview}
-            >
-              {isPrintingPreview ? (
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              ) : (
-                <Printer className="w-5 h-5 mr-2" />
-              )}
-              Imprimir
-            </Button>
-
-            <Button 
-              variant="outline"
-              className="w-1/2 h-12 font-bold border-coffee-200 text-coffee-700 hover:bg-coffee-50 rounded-xl"
-              onClick={() => printerService.openCashDrawer()}
-            >
-              <Unlock className="w-5 h-5 mr-2" />
-              Abrir Gaveta
-            </Button>
-          </div>
 
           <Button 
             className="w-full h-16 text-xl font-bold bg-[#33845B] hover:bg-[#2A6D4B] text-white rounded-xl shadow-md hover:-translate-y-0.5 transition-all"
